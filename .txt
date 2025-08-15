@@ -1,0 +1,45 @@
+backend/
+│
+├── src/
+│   ├── config/
+│   │   ├── db.ts
+│   │   ├── env.ts
+│   │   └── constants.ts
+│   │
+│   ├── middlewares/
+│   │   ├── error.middleware.ts
+│   │   ├── validate.middleware.ts
+│   │   └── auth.middleware.ts
+│   │
+│   ├── types/
+│   │   ├── express/index.d.ts
+│   │   └── user.type.ts
+│   │
+│   ├── utils/
+│   │   ├── jwt.util.ts
+│   │   ├── hash.util.ts
+│   │   └── logger.util.ts
+│   │
+│   ├── modules/
+│   │   └── v1/
+│   │       ├── models/
+│   │       │   └── user.model.ts
+│   │       │
+│   │       ├── services/
+│   │       │   └── user.service.ts
+│   │       │
+│   │       ├── controllers/
+│   │       │   └── user.controller.ts
+│   │       │
+│   │       ├── routes/
+│   │       │   └── user.route.ts
+│   │       │
+│   │       └── routes.ts           # combines all v1 routes
+│   │
+│   ├── app.ts
+│   └── server.ts
+│
+├── .env
+├── tsconfig.json
+├── package.json
+└── README.md            explain this structure with the router how work with version and what will be the end poinnt of server
