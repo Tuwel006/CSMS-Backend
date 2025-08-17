@@ -1,34 +1,71 @@
-import { User } from "../models/user.model";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import User from '../models/user.model';
+import { Op } from 'sequelize';
 
 dotenv.config();
-export const register = async ({name, email, phone, password}: any) => {
-    console.log(name, email, phone, password);
+const JWT_SECRET = process.env.JWT_SECRET!;
+export class AuthService {
+static async register({ username, email, password }: any) {
+    try {
+      const existingUser = await User.findOne({
+        where: {
+          [Op.or]: [{ email }, { username }]
+        }
+      });
 
-    const existingUser = await User.findOne({email}) || await User.findOne({phone});
-    if(existingUser) {
-        throw new Error('User ALready Exist'); 
-    }
+      if (existingUser) {
+        throw { status: 400, message: "User with this email or username already exists" };
+      }
 
-    const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({name, email, phone, password: hashed});
-    return user;
-}
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-export const login = async ({email, password}: any) => {
-    const user = await User.findOne({email});
-    if(!user) {
-        throw new Error("User not found");
+      const user = await User.create({
+        username,
+        email,
+        password: hashedPassword,
+      });
+
+      return { status: 201, user };
+    } catch (error: any) {
+      if (error.name === "SequelizeUniqueConstraintError") {
+        throw { status: 400, message: "Email or Username must be unique" };
+      }
+      if (error.name === "SequelizeValidationError") {
+        throw {
+          status: 400,
+          message: error.errors.map((e: any) => e.message).join(", "),
+        };
+      }
+
+      if (error.status) {
+        throw error;
+      }
+
+      console.error("Register error:", error);
+      throw { status: 500, message: "Internal server error" };
     }
-    const isMAtch = await bcrypt.compare(password, user.password);
-    if(!isMAtch) {
-        throw new Error("Invalid Credentials");
-    }
-    const token = jwt.sign({userId: user._id}, process.env.JWT_SECRET!, {
-        expiresIn: '1d',
-    })
-    console.log(process.env.JWT_SECRET, token);
-    return token;
+  }
+
+    static async login(email: string, password: string) {
+    const user = await User.findOne({ where: { email } });
+    if (!user) throw new Error("Invalid credentials");
+
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) throw new Error("Invalid credentials");
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, subscription: user.subscription },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return { token, user };
+  }
+
+  static verifyToken(token: string) {
+    return jwt.verify(token, JWT_SECRET);
+  }
+
 }
