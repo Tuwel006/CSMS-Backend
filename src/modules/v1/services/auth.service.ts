@@ -49,6 +49,7 @@ static async register({ username, email, password }: any) {
   }
 
     static async login(email: string, password: string) {
+      console.log("Attempting login for email:", email);
     const user = await User.findOne({ where: { email } });
     if (!user) throw new Error("Invalid credentials");
 
