@@ -15,7 +15,7 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:5000/api',
+        url: 'http://localhost:5000',
         description: 'Development server'
       }
     ],
@@ -130,7 +130,7 @@ const options = {
       }
     }
   },
-  apis: ['./src/modules/v1/routes/*.ts', './src/modules/v1/controllers/*.ts']
+  apis: ['./src/modules/v1/routes/*.ts']
 };
 
 const specs = swaggerJSDoc(options);

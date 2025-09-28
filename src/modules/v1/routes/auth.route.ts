@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller";
+import { validateRegister, validateLogin } from "../../../middlewares/validation/auth.validation";
 const router = Router();
 
 /**
  * @swagger
- * /v1/auth/register:
+ * /api/v1/auth/register:
  *   post:
  *     summary: Register a new user
  *     description: Create a new user account with username, email, and password
@@ -59,11 +60,11 @@ const router = Router();
  *             example:
  *               error: "Internal server error"
  */
-router.post('/register', AuthController.register);
+router.post('/signup', validateRegister, AuthController.register);
 
 /**
  * @swagger
- * /v1/auth/login:
+ * /api/v1/auth/login:
  *   post:
  *     summary: User login
  *     description: Authenticate user with email and password, returns JWT token
@@ -110,6 +111,6 @@ router.post('/register', AuthController.register);
  *             example:
  *               error: "Email and password are required"
  */
-router.post('/login', AuthController.login);
+router.post('/login', validateLogin, AuthController.login);
 
 export default router;

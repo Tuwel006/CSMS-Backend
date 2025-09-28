@@ -1,9 +1,11 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import {sequelize} from "../../../config/db";
-import { UserAttributes } from "../../../types/user.types";
+import { roles, UserAttributes } from "../../../types/user.types";
 
 
 interface UserCreationAttributes extends Optional<UserAttributes, "id" | "subscription"> {}
+
+
 
 export class User extends Model<UserAttributes, UserCreationAttributes>
   implements UserAttributes {
@@ -11,7 +13,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes>
   public username!: string;
   public email!: string;
   public password!: string;
-  public subscription!: boolean;
+  public roles!: roles;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -45,9 +47,10 @@ User.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    subscription: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
+    roles: {
+      type: DataTypes.ENUM(...Object.values(roles)),
+      allowNull: false,
+      defaultValue: roles.USER,
     },
   },
   {

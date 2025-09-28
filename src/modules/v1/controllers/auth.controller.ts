@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
 import { AuthService } from "../services/auth.service";
+import { RegisterDto, LoginDto } from "../dtos/auth.dto";
+import { AUTH_MESSAGES } from "../../../constants/messages";
+import { HTTP_STATUS } from "../../../constants/status-codes";
 
 /**
  * @swagger
@@ -12,9 +15,9 @@ export class AuthController {
     try {
     //   const { email, password } = req.body;
       const user = await AuthService.register(req.body);
-      res.status(201).json({ message: "User registered successfully", user });
+      res.status(HTTP_STATUS.CREATED).json({ message: AUTH_MESSAGES.USER_REGISTERED, user });
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      res.status(HTTP_STATUS.BAD_REQUEST).json({ error: error.message });
     }
   }
 
@@ -29,9 +32,9 @@ export class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
       
-      res.status(200).json({ token, user });
+      res.status(HTTP_STATUS.OK).json({ token, user });
     } catch (error: any) {
-      res.status(401).json({ error: error.message });
+      res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: error.message });
     }
   }
 }
