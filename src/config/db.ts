@@ -1,32 +1,31 @@
+import 'reflect-metadata';
+import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
-import { Sequelize } from 'sequelize';
+import { User } from '../modules/v1/shared/entities/User';
+
 dotenv.config();
 
-export const sequelize = new Sequelize(
-    process.env.DB_NAME as string,
-    process.env.DB_USER as string,
-    process.env.DB_PASS as string,
-    {
-        host: process.env.DB_HOST,
-        port: Number(process.env.DB_PORT),
-        dialect: "mysql",
-    }
-);
-
-sequelize.sync({ alter: true }) // or { force: true } to drop+recreate
-  .then(() => {
-    console.log("Database synced");
-  })
-  .catch((err) => {
-    console.error("Sync failed:", err);
-  });
-
+export const AppDataSource = new DataSource({
+    type: 'mysql',
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+    username: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    synchronize: true, // Auto-sync in development
+    logging: false,
+    entities: [__dirname+"/../modules/v1/shared/entities/*.{ts,js}"],
+    migrations: [],
+    subscribers: [],
+});
 
 export const connectDB = async () => {
     try {
-        await sequelize.authenticate();
-        console.log(('MySQL Connection Successfully.'));
+        await AppDataSource.initialize();
+        console.log('MySQL Connection Successfully.');
+        console.log('Database synced successfully.');
     } catch (error) {
-        console.error("MySQL connection Error: ",error);
+        console.error('MySQL connection Error: ', error);
+        throw error;
     }
-}
+};
