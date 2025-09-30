@@ -2,6 +2,7 @@ import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { userAuthPaths } from '../modules/v1/user/auth/userAuth.swagger';
 import { plansPaths } from '../modules/v1/admin/plans/plans.swagger';
+import { planPermissionPaths } from '../modules/v1/admin/plan-permissions/plan-permission.swagger';
 import { tenantPaths } from '../modules/v1/tenant/tenants/tenant.swagger';
 import { rolePaths } from '../modules/v1/tenant/roles/role.swagger';
 
@@ -381,6 +382,7 @@ const options = {
     paths: {
       ...userAuthPaths,
       ...plansPaths,
+      ...planPermissionPaths,
       ...tenantPaths,
       ...rolePaths
     }

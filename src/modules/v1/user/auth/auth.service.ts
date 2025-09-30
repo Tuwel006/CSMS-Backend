@@ -57,8 +57,17 @@ export class AuthService {
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) throw new Error(AUTH_MESSAGES.INVALID_CREDENTIALS);
 
+    const expiresIn = 7 * 24 * 60 * 60; // 7 days in seconds
+    // const exp = Math.floor(Date.now() / 1000) + expiresIn;
+    
     const token = jwt.sign(
-      { id: user.id, email: user.email, isGlobalAdmin: user.is_global_admin, tenantId: user.tenant_id },
+      { 
+        id: user.id, 
+        email: user.email, 
+        isGlobalAdmin: user.is_global_admin, 
+        tenantId: user.tenant_id,
+        // exp
+      },
       JWT_SECRET,
       { expiresIn: "7d" }
     );

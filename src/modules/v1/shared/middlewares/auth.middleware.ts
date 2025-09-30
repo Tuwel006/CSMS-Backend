@@ -21,7 +21,6 @@ function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    console.log("Decoded Token:", decoded);
     req.user = decoded;
     next();
   } catch (err) {
@@ -31,7 +30,6 @@ function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
 }
 
 function globalAdminOnly(req: AuthRequest, res: Response, next: NextFunction) {
-    console.log("User Info:", req.user);
   if (!req.user?.isGlobalAdmin) {
     const error = ApiResponse.forbidden("Global admin access required");
     return res.status(error.status).json(error);
