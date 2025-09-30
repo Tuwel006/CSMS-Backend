@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { User } from './User';
 import { Plan } from './Plan';
+import { Matches } from './Matches';
 // import { Plan } from './Plan';
 // import { Match } from './Match';
 // import { Tournament } from './Tournament';
@@ -42,8 +43,8 @@ export class Tenant {
   @OneToMany(() => User, (user) => user.tenant)
   users: User[];
 
-//   @OneToMany(() => Match, (match) => match.tenant)
-//   matches: Match[];
+  @OneToMany(() => Matches, (match) => match.tenant)
+  matches: Matches[];
 
 //   @OneToMany(() => Tournament, (tournament) => tournament.tenant)
 //   tournaments: Tournament[];
