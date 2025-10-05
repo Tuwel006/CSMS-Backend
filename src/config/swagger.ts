@@ -5,6 +5,7 @@ import { plansPaths } from '../modules/v1/admin/plans/plans.swagger';
 import { planPermissionPaths } from '../modules/v1/admin/plan-permissions/plan-permission.swagger';
 import { tenantPaths } from '../modules/v1/tenant/tenants/tenant.swagger';
 import { rolePaths } from '../modules/v1/tenant/roles/role.swagger';
+import { teamPaths } from '../modules/v1/teams/team.swagger';
 
 const options = {
   definition: {
@@ -384,7 +385,8 @@ const options = {
       ...plansPaths,
       ...planPermissionPaths,
       ...tenantPaths,
-      ...rolePaths
+      ...rolePaths,
+      ...teamPaths
     }
   },
   apis: [] // Required by swagger-jsdoc even when using direct path definitions

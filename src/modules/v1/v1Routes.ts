@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { userAuthRoutes } from './user';
 import { plansRoutes, planPermissionRoutes } from './admin';
 import tenantRoutes from './tenant';
+import { teamRoutes } from './teams';
 
 const router = Router();
 
@@ -14,5 +15,8 @@ router.use('/admin/plan-permissions', planPermissionRoutes);
 
 // Tenant routes
 router.use('/tenant', tenantRoutes);
+
+// Teams routes
+router.use('/teams', teamRoutes);
 
 export default router;
