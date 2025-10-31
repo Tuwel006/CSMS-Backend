@@ -43,11 +43,13 @@ export class PlanPermissionService {
   static async getPlanPermissions(planId: number) {
     const planPermissionRepository = AppDataSource.getRepository(PlanPermission);
     
-    return await planPermissionRepository.find({
+    const permissions = await planPermissionRepository.find({
       where: { plan: { id: planId } },
       relations: ['permission'],
       order: { permission: { resource: 'ASC', action: 'ASC' } }
     });
+    
+    return { data: permissions };
   }
 
   static async updatePlanPermission(planId: number, permissionId: number, updateData: any) {

@@ -80,3 +80,7 @@ export interface PlanResponseDto {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface PlanListResponseDto {
+  data: PlanResponseDto[];
+}

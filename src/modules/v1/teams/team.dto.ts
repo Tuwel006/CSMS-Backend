@@ -22,9 +22,21 @@ export interface TeamResponseDto {
   updatedAt: Date;
 }
 
+export interface GetTeamsQueryDto {
+  page?: number;
+  limit?: number;
+  search?: string;
+  searchBy?: 'name' | 'short_name' | 'location';
+  sort?: 'ASC' | 'DESC';
+  sortBy?: 'name' | 'short_name' | 'location' | 'createdAt';
+}
+
 export interface TeamListResponseDto {
-  teams: TeamResponseDto[];
-  total: number;
-  page: number;
-  limit: number;
+  data: TeamResponseDto[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }

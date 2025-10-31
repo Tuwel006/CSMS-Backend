@@ -99,6 +99,34 @@ export const teamPaths = {
           required: false,
           schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
           description: 'Number of items per page'
+        },
+        {
+          name: 'search',
+          in: 'query',
+          required: false,
+          schema: { type: 'string' },
+          description: 'Search term to filter teams'
+        },
+        {
+          name: 'searchBy',
+          in: 'query',
+          required: false,
+          schema: { type: 'string', enum: ['name', 'short_name', 'location'], default: 'name' },
+          description: 'Field to search by'
+        },
+        {
+          name: 'sort',
+          in: 'query',
+          required: false,
+          schema: { type: 'string', enum: ['ASC', 'DESC'], default: 'DESC' },
+          description: 'Sort order'
+        },
+        {
+          name: 'sortBy',
+          in: 'query',
+          required: false,
+          schema: { type: 'string', enum: ['name', 'short_name', 'location', 'createdAt'], default: 'createdAt' },
+          description: 'Field to sort by'
         }
       ],
       responses: {
@@ -114,7 +142,7 @@ export const teamPaths = {
                   data: {
                     type: 'object',
                     properties: {
-                      teams: {
+                      data: {
                         type: 'array',
                         items: {
                           type: 'object',
@@ -129,9 +157,15 @@ export const teamPaths = {
                           }
                         }
                       },
-                      total: { type: 'integer', example: 5 },
-                      page: { type: 'integer', example: 1 },
-                      limit: { type: 'integer', example: 10 }
+                      meta: {
+                        type: 'object',
+                        properties: {
+                          total: { type: 'integer', example: 5 },
+                          page: { type: 'integer', example: 1 },
+                          limit: { type: 'integer', example: 10 },
+                          totalPages: { type: 'integer', example: 1 }
+                        }
+                      }
                     }
                   }
                 }
@@ -176,7 +210,7 @@ export const teamPaths = {
                   data: {
                     type: 'object',
                     properties: {
-                      teams: {
+                      data: {
                         type: 'array',
                         items: {
                           type: 'object',

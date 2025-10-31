@@ -16,9 +16,10 @@ export class PlansService {
 
   static async getAllPlans() {
     const planRepository = AppDataSource.getRepository(Plan);
-    return await planRepository.find({
+    const plans = await planRepository.find({
       order: { createdAt: 'DESC' }
     });
+    return { data: plans };
   }
 
   static async getPlanById(id: number) {
@@ -45,10 +46,11 @@ export class PlansService {
 
   static async getActivePlans() {
     const planRepository = AppDataSource.getRepository(Plan);
-    return await planRepository.find({
+    const plans = await planRepository.find({
       where: { is_active: true },
       order: { price: 'ASC' }
     });
+    return { data: plans };
   }
 
   static async togglePlanStatus(id: number) {

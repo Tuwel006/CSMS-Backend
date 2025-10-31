@@ -1,6 +1,7 @@
 import { AppDataSource } from '../../../config/db';
 import { Team } from '../shared/entities/Team';
 import { HTTP_STATUS } from '../../../constants/status-codes';
+import { GetTeamsQueryDto } from './team.dto';
 
 export class TeamService {
   static async createTeam({ name, short_name, logo_url, location }: any) {
@@ -34,16 +35,36 @@ export class TeamService {
     return await teamRepository.save(team);
   }
 
-  static async getTeams(page = 1, limit = 10) {
+  static async getTeams(params: GetTeamsQueryDto) {
+    const { page, limit, search, searchBy, sort, sortBy } = params;
     const teamRepository = AppDataSource.getRepository(Team);
     
-    const [teams, total] = await teamRepository.findAndCount({
-      skip: (page - 1) * limit,
-      take: limit,
-      order: { createdAt: 'DESC' }
-    });
+    let query = teamRepository.createQueryBuilder('team');
+    
+    // Apply search filter
+    if (search && search.trim()) {
+      const searchValue = `%${search.trim()}%`;
+      query = query.where(`team.${searchBy} LIKE :search`, { search: searchValue });
+    }
+    
+    // Apply sorting
+    query = query.orderBy(`team.${sortBy}`, sort);
+    
+    // Apply pagination
+    query = query.skip((page! - 1) * limit!).take(limit);
+    
+    const [teams, total] = await query.getManyAndCount();
+    const totalPages = Math.ceil(total / limit!);
 
-    return { teams, total, page, limit };
+    return {
+      data: teams,
+      meta: {
+        total,
+        page: page!,
+        limit: limit!,
+        totalPages
+      }
+    };
   }
 
   static async searchTeams(name: string, location?: string) {
@@ -61,7 +82,7 @@ export class TeamService {
       .orderBy('team.name', 'ASC')
       .getMany();
 
-    return teams;
+    return { data: teams };
   }
 
   static async getTeamById(teamId: number) {

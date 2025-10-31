@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { TeamService } from './team.service';
-import { CreateTeamDto, UpdateTeamDto } from './team.dto';
+import { CreateTeamDto, UpdateTeamDto, GetTeamsQueryDto } from './team.dto';
 import { ApiResponse } from '../../../utils/ApiResponse';
 
 export class TeamController {
@@ -18,12 +18,27 @@ export class TeamController {
     }
   }
 
-  static async getTeams(req: Request, res: Response) {
+  static async getTeams(req: Request<{}, {}, {}, GetTeamsQueryDto>, res: Response) {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
+      const {
+        page = 1,
+        limit = 10,
+        search,
+        searchBy = 'name',
+        sort = 'DESC',
+        sortBy = 'createdAt'
+      } = req.query;
       
-      const result = await TeamService.getTeams(page, limit);
+      const queryParams = {
+        page: parseInt(page.toString()),
+        limit: parseInt(limit.toString()),
+        search,
+        searchBy,
+        sort,
+        sortBy
+      };
+      
+      const result = await TeamService.getTeams(queryParams);
       
       const response = ApiResponse.success(result, 'Teams retrieved successfully');
       res.status(response.status).json(response);
@@ -45,7 +60,7 @@ export class TeamController {
       
       const teams = await TeamService.searchTeams(name.trim(), location);
       
-      const response = ApiResponse.success({ teams }, 'Teams found successfully');
+      const response = ApiResponse.success(result, 'Teams found successfully');
       res.status(response.status).json(response);
     } catch (error: any) {
       const errorResponse = ApiResponse.badRequest(error.message);

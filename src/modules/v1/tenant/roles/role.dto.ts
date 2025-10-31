@@ -31,8 +31,11 @@ export interface PermissionDto {
 }
 
 export interface RoleListResponseDto {
-  roles: RoleResponseDto[];
-  total: number;
-  page: number;
-  limit: number;
+  data: RoleResponseDto[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }

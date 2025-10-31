@@ -220,7 +220,7 @@ export const rolePaths = {
                   data: {
                     type: 'object',
                     properties: {
-                      roles: {
+                      data: {
                         type: 'array',
                         items: {
                           type: 'object',
@@ -248,9 +248,15 @@ export const rolePaths = {
                           }
                         }
                       },
-                      total: { type: 'integer', example: 5 },
-                      page: { type: 'integer', example: 1 },
-                      limit: { type: 'integer', example: 10 }
+                      meta: {
+                        type: 'object',
+                        properties: {
+                          total: { type: 'integer', example: 5 },
+                          page: { type: 'integer', example: 1 },
+                          limit: { type: 'integer', example: 10 },
+                          totalPages: { type: 'integer', example: 1 }
+                        }
+                      }
                     }
                   }
                 }
@@ -296,7 +302,7 @@ export const rolePaths = {
                   data: {
                     type: 'object',
                     properties: {
-                      permissions: {
+                      data: {
                         type: 'array',
                         items: {
                           type: 'object',

@@ -87,8 +87,18 @@ export class RoleService {
       createdAt: role.createdAt,
       updatedAt: role.updatedAt
     }));
+    
+    const totalPages = Math.ceil(total / limit);
 
-    return { roles: formattedRoles, total, page, limit };
+    return {
+      data: formattedRoles,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages
+      }
+    };
   }
 
   static async getRoleById(roleId: number) {
@@ -197,9 +207,11 @@ export class RoleService {
   static async getAllPermissions() {
     const permissionRepository = AppDataSource.getRepository(Permission);
     
-    return await permissionRepository.find({
+    const permissions = await permissionRepository.find({
       where: { is_active: true },
       order: { resource: 'ASC', action: 'ASC' }
     });
+    
+    return { data: permissions };
   }
 }
