@@ -1,20 +1,12 @@
 import jwt from "jsonwebtoken";
-import { Request, Response, NextFunction } from "express";
-import { ApiResponse } from "../../../../utils/ApiResponse";
-
-interface AuthRequest extends Request {
-  user?: {
-    id: number;
-    email: string;
-    isGlobalAdmin: boolean;
-    tenantId: number | null;
-  };
-}
+import { Response, NextFunction } from "express";
+import { HTTP_RESPONSE } from "../../../../utils/HttpResponse";
+import { AuthRequest } from "../../../../types/auth.types";
 
 function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers["authorization"];
   if (!authHeader) {
-    const error = ApiResponse.unauthorized("Authorization token required");
+    const error = HTTP_RESPONSE.UNAUTHORIZED("Authorization token required");
     return res.status(error.status).json(error);
   }
 
@@ -24,14 +16,14 @@ function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
     req.user = decoded;
     next();
   } catch (err) {
-    const error = ApiResponse.forbidden("Invalid or expired token");
+    const error = HTTP_RESPONSE.FORBIDDEN("Invalid or expired token");
     return res.status(error.status).json(error);
   }
 }
 
 function globalAdminOnly(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.user?.isGlobalAdmin) {
-    const error = ApiResponse.forbidden("Global admin access required");
+    const error = HTTP_RESPONSE.FORBIDDEN("Global admin access required");
     return res.status(error.status).json(error);
   }
   next();
@@ -39,10 +31,11 @@ function globalAdminOnly(req: AuthRequest, res: Response, next: NextFunction) {
 
 function tenantAdminOnly(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.user?.tenantId) {
-    const error = ApiResponse.forbidden("Tenant access required");
+    const error = HTTP_RESPONSE.FORBIDDEN("Tenant access required");
     return res.status(error.status).json(error);
   }
   next();
 }
 
 export { authMiddleware, globalAdminOnly, tenantAdminOnly };
+export { superAdminOnly } from './superAdmin.middleware';

@@ -8,7 +8,7 @@ export class Team {
   @Column({ length: 100 })
   name: string;
 
-  @Column({ length: 10 })
+  @Column({ length: 10, nullable: true })
   short_name: string;
 
   @Column({ nullable: true })
@@ -16,6 +16,12 @@ export class Team {
 
   @Column({ length: 100, nullable: true })
   location: string;
+
+  @Column()
+  tenant_id: number;
+
+  @Column({ default: true })
+  is_active: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -5,9 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  ManyToMany,
+  JoinTable,
   JoinColumn,
 } from 'typeorm';
 import { Tenant } from './Tenant';
+import { Team } from './Team';
 
 export enum MatchFormat {
   TEST = 'TEST',
@@ -19,9 +22,6 @@ export enum MatchFormat {
 export class Matches {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column({ unique: true })
-  match_id: string;
 
   @Column({
     type: 'enum',
@@ -35,14 +35,19 @@ export class Matches {
   @Column()
   status: string;
 
-  @Column()
-  team1_name: string;
-
-  @Column()
-  team2_name: string;
+  @Column({ nullable: true })
+  match_date: Date;
 
   @Column()
   tenant_id: number;
+
+  @ManyToMany(() => Team)
+  @JoinTable({
+    name: 'match_teams',
+    joinColumn: { name: 'match_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'team_id', referencedColumnName: 'id' }
+  })
+  teams: Team[];
 
   @ManyToOne(() => Tenant)
   @JoinColumn({ name: 'tenant_id' })
