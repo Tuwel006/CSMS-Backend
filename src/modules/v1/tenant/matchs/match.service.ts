@@ -1,6 +1,7 @@
 import { AppDataSource } from '../../../../config/db';
 import { Match } from '../../shared/entities/Match';
 import { Team } from '../../shared/entities/Team';
+import { TeamService } from '../../teams/team.service';
 import { HTTP_STATUS } from '../../../../constants/status-codes';
 
 export class MatchService {
@@ -18,23 +19,21 @@ export class MatchService {
 
       // Create Team A if name is provided
       if (matchData.teamAName) {
-        const teamA = teamRepository.create({
+        const savedTeamA = await TeamService.createTeam({
           name: matchData.teamAName,
           location: matchData.teamALocation,
           tenant_id: tenantId
         });
-        const savedTeamA = await teamRepository.save(teamA);
         teamAId = savedTeamA.id;
       }
 
       // Create Team B if name is provided
       if (matchData.teamBName) {
-        const teamB = teamRepository.create({
+        const savedTeamB = await TeamService.createTeam({
           name: matchData.teamBName,
           location: matchData.teamBLocation,
           tenant_id: tenantId
         });
-        const savedTeamB = await teamRepository.save(teamB);
         teamBId = savedTeamB.id;
       }
 
@@ -85,7 +84,7 @@ export class MatchService {
       relations: ['teamA', 'teamB'],
       skip: (page - 1) * limit,
       take: limit,
-      order: { match_date: 'DESC' }
+      order: { createdAt: 'DESC' }
     });
 
     const formattedMatches = matches.map(match => ({

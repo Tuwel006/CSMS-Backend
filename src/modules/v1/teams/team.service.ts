@@ -4,32 +4,16 @@ import { HTTP_STATUS } from '../../../constants/status-codes';
 import { GetTeamsQueryDto } from './team.dto';
 
 export class TeamService {
-  static async createTeam({ name, short_name, logo_url, location }: any) {
+  static async createTeam({ name, short_name, logo_url, location, tenant_id }: any) {
     const teamRepository = AppDataSource.getRepository(Team);
-
-    // Check if team name exists
-    const existingTeam = await teamRepository.findOne({
-      where: { name }
-    });
-
-    if (existingTeam) {
-      throw { status: HTTP_STATUS.BAD_REQUEST, message: 'Team name already exists' };
-    }
-
-    // Check if short name exists
-    const existingShortName = await teamRepository.findOne({
-      where: { short_name }
-    });
-
-    if (existingShortName) {
-      throw { status: HTTP_STATUS.BAD_REQUEST, message: 'Team short name already exists' };
-    }
 
     const team = teamRepository.create({
       name,
       short_name,
       logo_url,
-      location
+      location,
+      tenant_id,
+      is_active: true
     });
 
     return await teamRepository.save(team);
