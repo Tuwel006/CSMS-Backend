@@ -52,15 +52,16 @@ export class TeamController {
     try {
       const name = req.query.name as string;
       const location = req.query.location as string;
+      const id = req.query.id ? parseInt(req.query.id as string) : undefined;
       
-      if (!name || name.trim().length === 0) {
-        const response = ApiResponse.badRequest('Name parameter is required');
+      if (!name && !location && !id) {
+        const response = ApiResponse.badRequest('At least one search parameter (id, name, or location) is required');
         return res.status(response.status).json(response);
       }
       
-      const teams = await TeamService.searchTeams(name.trim(), location);
+      const teams = await TeamService.searchTeams(name, location, id);
       
-      const response = ApiResponse.success(result, 'Teams found successfully');
+      const response = ApiResponse.success(teams, 'Teams found successfully');
       res.status(response.status).json(response);
     } catch (error: any) {
       const errorResponse = ApiResponse.badRequest(error.message);

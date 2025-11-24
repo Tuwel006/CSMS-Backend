@@ -178,23 +178,30 @@ export const teamPaths = {
   },
   '/api/v1/teams/search': {
     get: {
-      summary: 'Search teams by name and location',
-      description: 'Search teams by name or short name with optional location filter',
+      summary: 'Search teams by id, name, or location',
+      description: 'Search teams by any combination of id, name, or location. At least one parameter is required.',
       tags: ['Teams'],
       parameters: [
         {
+          name: 'id',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer' },
+          description: 'Search by team ID'
+        },
+        {
           name: 'name',
           in: 'query',
-          required: true,
+          required: false,
           schema: { type: 'string', minLength: 1 },
-          description: 'Team name or short name to search for'
+          description: 'Search by team name or short name'
         },
         {
           name: 'location',
           in: 'query',
           required: false,
           schema: { type: 'string', minLength: 1 },
-          description: 'Filter by team location'
+          description: 'Search by team location'
         }
       ],
       responses: {
@@ -233,7 +240,7 @@ export const teamPaths = {
           }
         },
         400: {
-          description: 'Bad request - name parameter required',
+          description: 'Bad request - at least one search parameter required',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/ErrorResponse' }

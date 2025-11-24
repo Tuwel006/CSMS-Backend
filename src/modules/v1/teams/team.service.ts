@@ -51,20 +51,33 @@ export class TeamService {
     };
   }
 
-  static async searchTeams(name: string, location?: string) {
+  static async searchTeams(name?: string, location?: string, id?: number) {
     const teamRepository = AppDataSource.getRepository(Team);
     
-    let query = teamRepository
-      .createQueryBuilder('team')
-      .where('team.name LIKE :name OR team.short_name LIKE :name', { name: `%${name}%` });
+    let query = teamRepository.createQueryBuilder('team');
+    const conditions: string[] = [];
+    const parameters: any = {};
     
-    if (location && location.trim().length > 0) {
-      query = query.andWhere('team.location LIKE :location', { location: `%${location}%` });
+    if (id) {
+      conditions.push('team.id = :id');
+      parameters.id = id;
     }
     
-    const teams = await query
-      .orderBy('team.name', 'ASC')
-      .getMany();
+    if (name && name.trim()) {
+      conditions.push('(team.name LIKE :name OR team.short_name LIKE :name)');
+      parameters.name = `%${name.trim()}%`;
+    }
+    
+    if (location && location.trim()) {
+      conditions.push('team.location LIKE :location');
+      parameters.location = `%${location.trim()}%`;
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(conditions.join(' AND '), parameters);
+    }
+    
+    const teams = await query.orderBy('team.name', 'ASC').getMany();
 
     return { data: teams };
   }
