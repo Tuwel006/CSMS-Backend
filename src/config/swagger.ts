@@ -7,6 +7,7 @@ import { tenantPaths } from '../modules/v1/tenant/tenants/tenant.swagger';
 import { rolePaths } from '../modules/v1/tenant/roles/role.swagger';
 import { teamPaths } from '../modules/v1/teams/team.swagger';
 import { matchPaths } from '../modules/v1/tenant/matchs/match.swagger';
+import { playerPaths } from '../modules/v1/players/player.swagger';
 
 const options = {
   definition: {
@@ -388,7 +389,8 @@ const options = {
       ...tenantPaths,
       ...rolePaths,
       ...teamPaths,
-      ...matchPaths
+      ...matchPaths,
+      ...playerPaths
     }
   },
   apis: [] // Required by swagger-jsdoc even when using direct path definitions

@@ -3,6 +3,7 @@ import { userAuthRoutes } from './user';
 import { plansRoutes, planPermissionRoutes } from './admin';
 import tenantRoutes from './tenant';
 import { teamRoutes } from './teams';
+import { playerRoutes } from './players';
 
 const router = Router();
 
@@ -18,5 +19,8 @@ router.use('/tenant', tenantRoutes);
 
 // Teams routes
 router.use('/teams', teamRoutes);
+
+// Players routes
+router.use('/players', playerRoutes);
 
 export default router;
