@@ -4,6 +4,7 @@ import { plansRoutes, planPermissionRoutes } from './admin';
 import tenantRoutes from './tenant';
 import { teamRoutes } from './teams';
 import { playerRoutes } from './players';
+import { matchesRoutes } from './matches';
 
 const router = Router();
 
@@ -22,5 +23,8 @@ router.use('/teams', teamRoutes);
 
 // Players routes
 router.use('/players', playerRoutes);
+
+// Matches routes
+router.use('/matches', matchesRoutes);
 
 export default router;
