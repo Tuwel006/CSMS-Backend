@@ -5,6 +5,7 @@ import tenantRoutes from './tenant';
 import { teamRoutes } from './teams';
 import { playerRoutes } from './players';
 import { matchesRoutes } from './matches';
+import { authMiddleware } from './shared/middlewares/auth.middleware';
 
 const router = Router();
 
@@ -19,12 +20,12 @@ router.use('/admin/plan-permissions', planPermissionRoutes);
 router.use('/tenant', tenantRoutes);
 
 // Teams routes
-router.use('/teams', teamRoutes);
+router.use('/teams', authMiddleware, teamRoutes);
 
 // Players routes
-router.use('/players', playerRoutes);
+router.use('/players', authMiddleware, playerRoutes);
 
 // Matches routes
-router.use('/matches', matchesRoutes);
+router.use('/matches', authMiddleware, matchesRoutes);
 
 export default router;

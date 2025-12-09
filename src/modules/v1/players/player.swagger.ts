@@ -4,6 +4,7 @@ export const playerPaths = {
       summary: 'Create a new player',
       description: 'Creates a new player with full name and role',
       tags: ['Players'],
+      security: [{ bearerAuth: [] }],
       requestBody: {
         required: true,
         content: {
@@ -76,6 +77,7 @@ export const playerPaths = {
       summary: 'Get all players',
       description: 'Retrieves all players with pagination and filtering',
       tags: ['Players'],
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           name: 'page',
@@ -173,6 +175,7 @@ export const playerPaths = {
       summary: 'Search players by id or name',
       description: 'Search players by any combination of id or name. At least one parameter is required.',
       tags: ['Players'],
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           name: 'id',
@@ -242,6 +245,7 @@ export const playerPaths = {
       summary: 'Get player by ID',
       description: 'Retrieves a specific player by ID',
       tags: ['Players'],
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           name: 'id',
@@ -293,6 +297,7 @@ export const playerPaths = {
       summary: 'Update player',
       description: 'Updates player information',
       tags: ['Players'],
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           name: 'id',
@@ -382,6 +387,7 @@ export const playerPaths = {
       summary: 'Delete player',
       description: 'Deletes a player',
       tags: ['Players'],
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           name: 'id',

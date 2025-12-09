@@ -4,6 +4,7 @@ export const teamPaths = {
       summary: 'Create a new team',
       description: 'Creates a new team with name, short name, optional logo and location',
       tags: ['Teams'],
+      security: [{ bearerAuth: [] }],
       requestBody: {
         required: true,
         content: {
@@ -85,6 +86,7 @@ export const teamPaths = {
       summary: 'Get all teams',
       description: 'Retrieves all teams with pagination',
       tags: ['Teams'],
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           name: 'page',
@@ -181,6 +183,7 @@ export const teamPaths = {
       summary: 'Search teams by id, name, or location',
       description: 'Search teams by any combination of id, name, or location. At least one parameter is required.',
       tags: ['Teams'],
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           name: 'id',
@@ -255,6 +258,7 @@ export const teamPaths = {
       summary: 'Get team by ID',
       description: 'Retrieves a specific team by its ID',
       tags: ['Teams'],
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           name: 'id',
@@ -305,6 +309,7 @@ export const teamPaths = {
       summary: 'Update team',
       description: 'Updates team information',
       tags: ['Teams'],
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           name: 'id',
@@ -402,6 +407,7 @@ export const teamPaths = {
       summary: 'Delete team',
       description: 'Deletes a team',
       tags: ['Teams'],
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           name: 'id',

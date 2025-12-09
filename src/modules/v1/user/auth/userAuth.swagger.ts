@@ -210,7 +210,7 @@ export const userAuthPaths = {
             format: 'email'
           },
           description: 'Your registered email address',
-          example: 'john@example.com'
+          example: 'admin@csms.com'
         },
         {
           name: 'password',
@@ -221,7 +221,7 @@ export const userAuthPaths = {
             minLength: 6
           },
           description: 'Your account password',
-          example: 'securepassword123'
+          example: 'admin123'
         }
       ],
       requestBody: {
@@ -236,7 +236,7 @@ export const userAuthPaths = {
                   type: 'string',
                   format: 'email',
                   description: 'Your registered email address',
-                  example: 'john@example.com',
+                  example: 'admin@csms.com',
                   'x-input-type': 'email',
                   'x-placeholder': 'Enter your email'
                 },
@@ -244,7 +244,7 @@ export const userAuthPaths = {
                   type: 'string',
                   minLength: 6,
                   description: 'Your account password',
-                  example: 'securepassword123',
+                  example: 'admin123',
                   'x-input-type': 'password',
                   'x-placeholder': 'Enter your password'
                 }

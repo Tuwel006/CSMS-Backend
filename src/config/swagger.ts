@@ -7,6 +7,7 @@ import { tenantPaths } from '../modules/v1/tenant/tenants/tenant.swagger';
 import { rolePaths } from '../modules/v1/tenant/roles/role.swagger';
 import { teamPaths } from '../modules/v1/teams/team.swagger';
 import { matchPaths } from '../modules/v1/tenant/matchs/match.swagger';
+import { matchesPaths } from '../modules/v1/matches/matches.swagger';
 import { playerPaths } from '../modules/v1/players/player.swagger';
 
 const options = {
@@ -143,30 +144,30 @@ const options = {
           type: 'object',
           required: ['name', 'description', 'price', 'currency', 'billing_cycle'],
           properties: {
-            name: { 
-              type: 'string', 
+            name: {
+              type: 'string',
               minLength: 2,
               maxLength: 100,
               description: 'Plan name (2-100 characters)',
               'x-input-type': 'text',
               'x-placeholder': 'Enter plan name'
             },
-            description: { 
-              type: 'string', 
+            description: {
+              type: 'string',
               maxLength: 500,
               description: 'Plan description (max 500 characters)',
               'x-input-type': 'textarea',
               'x-placeholder': 'Enter plan description'
             },
-            price: { 
-              type: 'number', 
+            price: {
+              type: 'number',
               minimum: 0,
               description: 'Plan price (minimum 0)',
               'x-input-type': 'number',
               'x-placeholder': '0.00'
             },
-            currency: { 
-              type: 'string', 
+            currency: {
+              type: 'string',
               description: 'Currency code',
               'x-input-type': 'select',
               'x-options': [
@@ -176,8 +177,8 @@ const options = {
                 { label: 'INR - Indian Rupee', value: 'INR' }
               ]
             },
-            billing_cycle: { 
-              type: 'string', 
+            billing_cycle: {
+              type: 'string',
               enum: ['monthly', 'yearly', 'lifetime'],
               description: 'Billing cycle',
               'x-input-type': 'select',
@@ -187,132 +188,132 @@ const options = {
                 { label: 'Lifetime', value: 'lifetime' }
               ]
             },
-            max_matches_per_month: { 
-              type: 'integer', 
-              nullable: true, 
+            max_matches_per_month: {
+              type: 'integer',
+              nullable: true,
               minimum: 1,
               description: 'Maximum matches per month (leave empty for unlimited)',
               'x-input-type': 'number',
               'x-placeholder': 'Unlimited'
             },
-            max_matches_per_day: { 
-              type: 'integer', 
-              nullable: true, 
+            max_matches_per_day: {
+              type: 'integer',
+              nullable: true,
               minimum: 1,
               description: 'Maximum matches per day (leave empty for unlimited)',
               'x-input-type': 'number',
               'x-placeholder': 'Unlimited'
             },
-            max_total_matches: { 
-              type: 'integer', 
-              nullable: true, 
+            max_total_matches: {
+              type: 'integer',
+              nullable: true,
               minimum: 1,
               description: 'Maximum total matches (leave empty for unlimited)',
               'x-input-type': 'number',
               'x-placeholder': 'Unlimited'
             },
-            max_tournaments_per_month: { 
-              type: 'integer', 
-              nullable: true, 
+            max_tournaments_per_month: {
+              type: 'integer',
+              nullable: true,
               minimum: 1,
               description: 'Maximum tournaments per month (leave empty for unlimited)',
               'x-input-type': 'number',
               'x-placeholder': 'Unlimited'
             },
-            max_tournaments_per_year: { 
-              type: 'integer', 
-              nullable: true, 
+            max_tournaments_per_year: {
+              type: 'integer',
+              nullable: true,
               minimum: 1,
               description: 'Maximum tournaments per year (leave empty for unlimited)',
               'x-input-type': 'number',
               'x-placeholder': 'Unlimited'
             },
-            max_users: { 
-              type: 'integer', 
-              nullable: true, 
+            max_users: {
+              type: 'integer',
+              nullable: true,
               minimum: 1,
               description: 'Maximum users (leave empty for unlimited)',
               'x-input-type': 'number',
               'x-placeholder': 'Unlimited'
             },
-            max_admins: { 
-              type: 'integer', 
-              nullable: true, 
+            max_admins: {
+              type: 'integer',
+              nullable: true,
               minimum: 1,
               description: 'Maximum admins (leave empty for unlimited)',
               'x-input-type': 'number',
               'x-placeholder': 'Unlimited'
             },
-            max_match_duration_hours: { 
-              type: 'integer', 
-              nullable: true, 
+            max_match_duration_hours: {
+              type: 'integer',
+              nullable: true,
               minimum: 1,
               description: 'Maximum match duration in hours (leave empty for unlimited)',
               'x-input-type': 'number',
               'x-placeholder': 'Unlimited'
             },
-            max_tournament_duration_days: { 
-              type: 'integer', 
-              nullable: true, 
+            max_tournament_duration_days: {
+              type: 'integer',
+              nullable: true,
               minimum: 1,
               description: 'Maximum tournament duration in days (leave empty for unlimited)',
               'x-input-type': 'number',
               'x-placeholder': 'Unlimited'
             },
-            max_storage_gb: { 
-              type: 'integer', 
-              nullable: true, 
+            max_storage_gb: {
+              type: 'integer',
+              nullable: true,
               minimum: 1,
               description: 'Maximum storage in GB (leave empty for unlimited)',
               'x-input-type': 'number',
               'x-placeholder': 'Unlimited'
             },
-            max_file_size_mb: { 
-              type: 'integer', 
-              nullable: true, 
+            max_file_size_mb: {
+              type: 'integer',
+              nullable: true,
               minimum: 1,
               description: 'Maximum file size in MB (leave empty for unlimited)',
               'x-input-type': 'number',
               'x-placeholder': 'Unlimited'
             },
-            analytics_enabled: { 
-              type: 'boolean', 
+            analytics_enabled: {
+              type: 'boolean',
               default: false,
               description: 'Enable analytics feature',
               'x-input-type': 'checkbox'
             },
-            custom_branding: { 
-              type: 'boolean', 
+            custom_branding: {
+              type: 'boolean',
               default: false,
               description: 'Enable custom branding',
               'x-input-type': 'checkbox'
             },
-            api_access: { 
-              type: 'boolean', 
+            api_access: {
+              type: 'boolean',
               default: false,
               description: 'Enable API access',
               'x-input-type': 'checkbox'
             },
-            priority_support: { 
-              type: 'boolean', 
+            priority_support: {
+              type: 'boolean',
               default: false,
               description: 'Enable priority support',
               'x-input-type': 'checkbox'
             },
-            live_streaming: { 
-              type: 'boolean', 
+            live_streaming: {
+              type: 'boolean',
               default: false,
               description: 'Enable live streaming',
               'x-input-type': 'checkbox'
             },
-            advanced_reporting: { 
-              type: 'boolean', 
+            advanced_reporting: {
+              type: 'boolean',
               default: false,
               description: 'Enable advanced reporting',
               'x-input-type': 'checkbox'
             },
-            is_popular: { 
-              type: 'boolean', 
+            is_popular: {
+              type: 'boolean',
               default: false,
               description: 'Mark as popular plan',
               'x-input-type': 'checkbox'
@@ -390,6 +391,7 @@ const options = {
       ...rolePaths,
       ...teamPaths,
       ...matchPaths,
+      ...matchesPaths,
       ...playerPaths
     }
   },
