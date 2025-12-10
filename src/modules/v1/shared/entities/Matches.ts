@@ -1,61 +1,65 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
-  ManyToMany,
-  JoinTable,
   JoinColumn,
 } from 'typeorm';
-import { Tenant } from './Tenant';
 import { Team } from './Team';
+import { Tenant } from './Tenant';
 
 export enum MatchFormat {
-  TEST = 'TEST',
-  ODI = 'ODI',
   T20 = 'T20',
+  ODI = 'ODI',
+  TEST = 'TEST',
 }
 
 @Entity('matches')
 export class Matches {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn()
+  id: string;
 
-  @Column({
-    type: 'enum',
-    enum: MatchFormat,
-  })
-  format: MatchFormat;
+  @Column({ nullable: true })
+  team_a_id: number;
 
-  @Column()
-  venue: string;
-
-  @Column()
-  status: string;
+  @Column({ nullable: true })
+  team_b_id: number;
 
   @Column({ nullable: true })
   match_date: Date;
 
+  @Column({ nullable: true })
+  format: string;
+
+  @Column({ nullable: true })
+  venue: string;
+
+  @Column({ nullable: true })
+  status: string;
+
+  @Column({ default: true })
+  is_active: boolean;
+
   @Column()
   tenant_id: number;
 
-  @ManyToMany(() => Team)
-  @JoinTable({
-    name: 'match_teams',
-    joinColumn: { name: 'match_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'team_id', referencedColumnName: 'id' }
-  })
-  teams: Team[];
+  @ManyToOne(() => Team)
+  @JoinColumn({ name: 'team_a_id' })
+  teamA: Team;
+
+  @ManyToOne(() => Team)
+  @JoinColumn({ name: 'team_b_id' })
+  teamB: Team;
 
   @ManyToOne(() => Tenant)
   @JoinColumn({ name: 'tenant_id' })
   tenant: Tenant;
 
   @CreateDateColumn()
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
-  updated_at: Date;
+  updatedAt: Date;
 }

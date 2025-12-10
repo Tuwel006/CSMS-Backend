@@ -1,4 +1,111 @@
 export const matchesPaths = {
+    '/api/v1/matches/generate-token': {
+        post: {
+            summary: 'Generate a match token',
+            description: 'Generates a new unique match token and creates an initial match record.',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            responses: {
+                201: {
+                    description: 'Match token generated successfully',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    status: { type: 'integer', example: 201 },
+                                    message: { type: 'string', example: 'Match token generated successfully' },
+                                    data: {
+                                        type: 'object',
+                                        properties: {
+                                            id: { type: 'string', example: 'CSMSMATCH123456' },
+                                            is_active: { type: 'boolean', example: true },
+                                            tenant_id: { type: 'integer', example: 1 },
+                                            createdAt: { type: 'string', format: 'date-time' },
+                                            updatedAt: { type: 'string', format: 'date-time' }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                401: {
+                    description: 'Unauthorized',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                403: {
+                    description: 'Forbidden',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    '/api/v1/matches/delete-token/{id}': {
+        delete: {
+            summary: 'Delete a match token',
+            description: 'Deletes a match token (and the associated match record).',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'Match Token (ID)'
+                }
+            ],
+            responses: {
+                200: {
+                    description: 'Match token deleted successfully',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    status: { type: 'integer', example: 200 },
+                                    message: { type: 'string', example: 'Match token deleted successfully' }
+                                }
+                            }
+                        }
+                    }
+                },
+                404: {
+                    description: 'Match token not found',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                401: {
+                    description: 'Unauthorized',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                403: {
+                    description: 'Forbidden',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                }
+            }
+        }
+    },
     '/api/v1/matches': {
         post: {
             summary: 'Create a new match',

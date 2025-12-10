@@ -2,7 +2,7 @@ import { AppDataSource } from '../../../config/db';
 import { MatchPlayer } from '../shared/entities/MatchPlayer';
 import { PlayerStats } from '../shared/entities/PlayerStats';
 import { MatchFormat } from '../shared/entities/Matches';
-import { Between } from 'typeorm';
+import { Between, In } from 'typeorm';
 
 export class PlayerMatchService {
     private matchPlayerRepo = AppDataSource.getRepository(MatchPlayer);
@@ -106,7 +106,7 @@ export class PlayerMatchService {
         const stats = await this.playerStatsRepo.find({
             where: {
                 player_id: playerId,
-                match_id: Between(Math.min(...matchIds), Math.max(...matchIds))
+                match_id: In(matchIds)
             }
         });
 
@@ -203,7 +203,7 @@ export class PlayerMatchService {
     /**
      * Check if player played in a specific match
      */
-    async isPlayerInMatch(playerId: number, matchId: number): Promise<boolean> {
+    async isPlayerInMatch(playerId: number, matchId: string): Promise<boolean> {
         const count = await this.matchPlayerRepo.count({
             where: { player_id: playerId, match_id: matchId }
         });
@@ -213,7 +213,7 @@ export class PlayerMatchService {
     /**
      * Get player's role in a specific match
      */
-    async getPlayerRoleInMatch(playerId: number, matchId: number) {
+    async getPlayerRoleInMatch(playerId: number, matchId: string) {
         const matchPlayer = await this.matchPlayerRepo.findOne({
             where: { player_id: playerId, match_id: matchId },
             relations: ['team']
@@ -239,7 +239,7 @@ export class PlayerMatchService {
     /**
      * Get all players in a specific match
      */
-    async getMatchPlayers(matchId: number, teamId?: number) {
+    async getMatchPlayers(matchId: string, teamId?: number) {
         const where: any = { match_id: matchId };
         if (teamId) {
             where.team_id = teamId;
@@ -255,7 +255,7 @@ export class PlayerMatchService {
     /**
      * Get playing 11 for a match
      */
-    async getMatchPlaying11(matchId: number, teamId: number) {
+    async getMatchPlaying11(matchId: string, teamId: number) {
         return await this.matchPlayerRepo.find({
             where: {
                 match_id: matchId,
@@ -270,7 +270,7 @@ export class PlayerMatchService {
     /**
      * Get substitutes for a match
      */
-    async getMatchSubstitutes(matchId: number, teamId: number) {
+    async getMatchSubstitutes(matchId: string, teamId: number) {
         return await this.matchPlayerRepo.find({
             where: {
                 match_id: matchId,

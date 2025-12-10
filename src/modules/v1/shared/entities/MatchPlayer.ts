@@ -7,7 +7,7 @@ import { Team } from './Team';
 @Index(['match_id', 'team_id'])
 export class MatchPlayer {
   @PrimaryColumn()
-  match_id: number;
+  match_id: string;
 
   @PrimaryColumn()
   player_id: number;

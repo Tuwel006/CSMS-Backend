@@ -9,7 +9,7 @@ export class PlayerStats {
   id: number;
 
   @Column()
-  match_id: number;
+  match_id: string;
 
   @Column()
   player_id: number;

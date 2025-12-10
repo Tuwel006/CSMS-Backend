@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 import { Player } from './Player';
-import { MatchFormat } from './Matches';
+
 
 @Entity('player_career_stats')
 @Index(['player_id', 'format'], { unique: true })
@@ -11,8 +11,8 @@ export class PlayerCareerStats {
     @Column()
     player_id: number;
 
-    @Column({ type: 'enum', enum: MatchFormat })
-    format: MatchFormat; // TEST, ODI, T20
+    @Column()
+    format: string;
 
     // Batting career stats
     @Column({ default: 0 })

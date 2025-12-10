@@ -31,7 +31,7 @@ export class Score {
   id: number;
 
   @Column()
-  match_id: number;
+  match_id: string;
 
   @Column()
   innings_no: number;

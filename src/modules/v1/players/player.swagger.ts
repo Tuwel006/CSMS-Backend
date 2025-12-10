@@ -430,5 +430,239 @@ export const playerPaths = {
         }
       }
     }
+  },
+  '/api/v1/players/{id}/matches': {
+    get: {
+      summary: 'Get player matches',
+      description: 'Get all matches for a specific player with filters',
+      tags: ['Players'],
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer', minimum: 1 },
+          description: 'Player ID'
+        },
+        {
+          name: 'format',
+          in: 'query',
+          required: false,
+          schema: { type: 'string', enum: ['T20', 'ODI', 'TEST'] },
+          description: 'Match format'
+        },
+        {
+          name: 'isPlaying11',
+          in: 'query',
+          required: false,
+          schema: { type: 'boolean' },
+          description: 'Filter by playing 11 status'
+        },
+        {
+          name: 'teamId',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer' },
+          description: 'Filter by team ID'
+        },
+        {
+          name: 'limit',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer' },
+          description: 'Limit number of records'
+        }
+      ],
+      responses: {
+        200: {
+          description: 'Player matches retrieved successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  status: { type: 'integer', example: 200 },
+                  code: { type: 'string', example: 'SUCCESS' },
+                  message: { type: 'string', example: 'Player matches retrieved successfully' },
+                  data: { type: 'array', items: { type: 'object' } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/v1/players/{id}/matches/summary': {
+    get: {
+      summary: 'Get player match summary',
+      description: 'Get summary statistics for a player',
+      tags: ['Players'],
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer', minimum: 1 },
+          description: 'Player ID'
+        }
+      ],
+      responses: {
+        200: {
+          description: 'Player match summary retrieved successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  status: { type: 'integer', example: 200 },
+                  code: { type: 'string', example: 'SUCCESS' },
+                  message: { type: 'string', example: 'Player match summary retrieved successfully' },
+                  data: {
+                    type: 'object',
+                    properties: {
+                      player_id: { type: 'integer' },
+                      total_matches: { type: 'integer' },
+                      playing_11_matches: { type: 'integer' },
+                      substitute_appearances: { type: 'integer' },
+                      by_format: { type: 'object' },
+                      by_status: { type: 'object' }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/v1/players/{id}/matches/recent': {
+    get: {
+      summary: 'Get recent matches with stats',
+      description: 'Get player recent matches including performance stats',
+      tags: ['Players'],
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer', minimum: 1 },
+          description: 'Player ID'
+        },
+        {
+          name: 'limit',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer', default: 10 },
+          description: 'Number of recent matches'
+        }
+      ],
+      responses: {
+        200: {
+          description: 'Player recent matches retrieved successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  status: { type: 'integer', example: 200 },
+                  code: { type: 'string', example: 'SUCCESS' },
+                  message: { type: 'string', example: 'Player recent matches retrieved successfully' },
+                  data: { type: 'array', items: { type: 'object' } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/v1/players/{id}/matches/by-date': {
+    get: {
+      summary: 'Get matches by date range',
+      description: 'Get player matches within a specific date range',
+      tags: ['Players'],
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer', minimum: 1 },
+          description: 'Player ID'
+        },
+        {
+          name: 'startDate',
+          in: 'query',
+          required: true,
+          schema: { type: 'string', format: 'date' },
+          description: 'Start date (YYYY-MM-DD)'
+        },
+        {
+          name: 'endDate',
+          in: 'query',
+          required: true,
+          schema: { type: 'string', format: 'date' },
+          description: 'End date (YYYY-MM-DD)'
+        }
+      ],
+      responses: {
+        200: {
+          description: 'Player matches by date range retrieved successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  status: { type: 'integer', example: 200 },
+                  code: { type: 'string', example: 'SUCCESS' },
+                  message: { type: 'string', example: 'Player matches by date range retrieved successfully' },
+                  data: { type: 'array', items: { type: 'object' } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/v1/players/{id}/matches/by-team': {
+    get: {
+      summary: 'Get matches grouped by team',
+      description: 'Get player matches grouped by the team they played for',
+      tags: ['Players'],
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer', minimum: 1 },
+          description: 'Player ID'
+        }
+      ],
+      responses: {
+        200: {
+          description: 'Player matches grouped by team retrieved successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  status: { type: 'integer', example: 200 },
+                  code: { type: 'string', example: 'SUCCESS' },
+                  message: { type: 'string', example: 'Player matches grouped by team retrieved successfully' },
+                  data: { type: 'array', items: { type: 'object' } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 };

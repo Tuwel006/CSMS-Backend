@@ -1,6 +1,6 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
@@ -12,25 +12,25 @@ import { Tenant } from './Tenant';
 
 @Entity('matches')
 export class Match {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn()
+  id: string;
 
-  @Column()
+  @Column({ nullable: true })
   team_a_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   team_b_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   match_date: Date;
 
-  @Column()
+  @Column({ nullable: true })
   format: string;
 
-  @Column()
+  @Column({ nullable: true })
   venue: string;
 
-  @Column()
+  @Column({ nullable: true })
   status: string;
 
   @Column({ default: true })

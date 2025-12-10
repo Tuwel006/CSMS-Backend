@@ -8,6 +8,8 @@ const router = Router();
 router.use(authMiddleware);
 router.use(tenantAdminOnly);
 
+router.post('/generate-token', MatchesController.generateMatchToken);
+router.delete('/delete-token/:id', MatchesController.deleteMatchToken);
 router.post('/', MatchesController.createMatch);
 router.get('/', MatchesController.getMatches);
 router.get('/:id', MatchesController.getMatchById);

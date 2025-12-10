@@ -27,6 +27,21 @@ export class MatchesService {
         return newTeam.id;
     }
 
+    static async generateMatchToken(tenant_id: number) {
+        const matchRepository = AppDataSource.getRepository(Match);
+        const uniqueId = Math.floor(100000 + Math.random() * 900000);
+        const matchToken = `CSMSMATCH${uniqueId}`;
+
+        const match = matchRepository.create({
+            id: matchToken,
+            tenant_id,
+            is_active: true
+        });
+
+        // Insert ID only (other fields are nullable)
+        return await matchRepository.save(match);
+    }
+
     static async createMatch(data: CreateMatchDto, tenant_id: number) {
         const matchRepository = AppDataSource.getRepository(Match);
 
@@ -41,7 +56,8 @@ export class MatchesService {
             venue: data.venue,
             status: data.status,
             tenant_id,
-            is_active: true
+            is_active: true,
+            id: `CSMSMATCH${Math.floor(100000 + Math.random() * 900000)}` // Generate ID if creating fully
         });
 
         return await matchRepository.save(match);
@@ -55,7 +71,7 @@ export class MatchesService {
         });
     }
 
-    static async getMatchById(id: number, tenant_id: number) {
+    static async getMatchById(id: string, tenant_id: number) {
         const matchRepository = AppDataSource.getRepository(Match);
         const match = await matchRepository.findOne({
             where: { id, tenant_id },
@@ -69,7 +85,7 @@ export class MatchesService {
         return match;
     }
 
-    static async updateMatch(id: number, data: UpdateMatchDto, tenant_id: number) {
+    static async updateMatch(id: string, data: UpdateMatchDto, tenant_id: number) {
         const matchRepository = AppDataSource.getRepository(Match);
         const match = await this.getMatchById(id, tenant_id);
 
@@ -77,11 +93,15 @@ export class MatchesService {
         return await matchRepository.save(match);
     }
 
-    static async deleteMatch(id: number, tenant_id: number) {
+    static async deleteMatch(id: string, tenant_id: number) {
         const matchRepository = AppDataSource.getRepository(Match);
         const match = await this.getMatchById(id, tenant_id);
 
         await matchRepository.remove(match);
         return { message: 'Match deleted successfully' };
+    }
+
+    static async deleteMatchToken(id: string, tenant_id: number) {
+        return await this.deleteMatch(id, tenant_id);
     }
 }
