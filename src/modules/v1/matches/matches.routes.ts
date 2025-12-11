@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { MatchesController } from './matches.controller';
+import { TeamSetupController } from './team-setup.controller';
 import { authMiddleware, tenantAdminOnly } from '../shared/middlewares/auth.middleware';
 
 const router = Router();
@@ -8,6 +9,8 @@ const router = Router();
 router.use(authMiddleware);
 router.use(tenantAdminOnly);
 
+router.post('/team-setup', TeamSetupController.setupTeam);
+router.delete('/team-setup/:matchId/:teamId', TeamSetupController.deleteTeamSetup);
 router.post('/generate-token', MatchesController.generateMatchToken);
 router.delete('/delete-token/:id', MatchesController.deleteMatchToken);
 router.post('/', MatchesController.createMatch);

@@ -1,4 +1,7 @@
+import { teamSetupPaths } from './team-setup.swagger';
+
 export const matchesPaths = {
+    ...teamSetupPaths,
     '/api/v1/matches/generate-token': {
         post: {
             summary: 'Generate a match token',
