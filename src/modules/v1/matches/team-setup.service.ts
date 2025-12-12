@@ -101,6 +101,15 @@ export class TeamSetupService {
           playerId = savedPlayer.id;
         }
 
+        // Check if player already assigned to another team in this match
+        const existingAssignment = await matchPlayerRepository.findOne({
+          where: { match_id: data.matchId, player_id: playerId }
+        });
+
+        if (existingAssignment) {
+          throw { status: HTTP_STATUS.BAD_REQUEST, message: `Player ${playerData.name} is already assigned to another team in this match` };
+        }
+
         // Add player to match_players
         const matchPlayer = matchPlayerRepository.create({
           match_id: data.matchId,

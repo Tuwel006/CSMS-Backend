@@ -1,6 +1,7 @@
 import { AppDataSource } from '../../../../config/db';
 import { Match } from '../../shared/entities/Match';
 import { Team } from '../../shared/entities/Team';
+import { MatchPlayer } from '../../shared/entities/MatchPlayer';
 import { TeamService } from '../../teams/team.service';
 import { HTTP_STATUS } from '../../../../constants/status-codes';
 
@@ -67,7 +68,7 @@ export class MatchService {
 
       await queryRunner.commitTransaction();
 
-      return await this.getMatchById(savedMatch.id);
+      return await this.getMatchById(savedMatch.id as any);
     } catch (error: any) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -121,7 +122,7 @@ export class MatchService {
     };
   }
 
-  static async getMatchById(matchId: number) {
+  static async getMatchById(matchId: string) {
     const matchRepository = AppDataSource.getRepository(Match);
     
     const match = await matchRepository.findOne({
@@ -155,7 +156,7 @@ export class MatchService {
     };
   }
 
-  static async updateMatch(matchId: number, tenantId: number, updateData: any) {
+  static async updateMatch(matchId: string, tenantId: number, updateData: any) {
     const matchRepository = AppDataSource.getRepository(Match);
     
     const match = await matchRepository.findOne({
@@ -179,18 +180,33 @@ export class MatchService {
     return await this.getMatchById(matchId);
   }
 
-  static async deleteMatch(matchId: number, tenantId: number) {
-    const matchRepository = AppDataSource.getRepository(Match);
-    
-    const match = await matchRepository.findOne({
-      where: { id: matchId, tenant_id: tenantId }
-    });
+  static async deleteMatch(matchId: string, tenantId: number) {
+    const queryRunner = AppDataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!match) {
-      throw { status: HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
+    try {
+      const matchRepository = queryRunner.manager.getRepository(Match);
+      const matchPlayerRepository = queryRunner.manager.getRepository(MatchPlayer);
+      
+      const match = await matchRepository.findOne({
+        where: { id: matchId, tenant_id: tenantId }
+      });
+
+      if (!match) {
+        throw { status: HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
+      }
+
+      await matchPlayerRepository.delete({ match_id: matchId });
+      await matchRepository.remove(match);
+
+      await queryRunner.commitTransaction();
+      return { message: 'Match deleted successfully' };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
-
-    await matchRepository.remove(match);
-    return { message: 'Match deleted successfully' };
   }
 }
