@@ -1,7 +1,7 @@
 import { AppDataSource } from '../../../config/db';
 import { Team } from '../shared/entities/Team';
 import { Player } from '../shared/entities/Player';
-import { Matches } from '../shared/entities/Matches';
+import { Match } from '../shared/entities/Match';
 import { MatchPlayer } from '../shared/entities/MatchPlayer';
 import { HTTP_STATUS } from '../../../constants/status-codes';
 import { TeamSetupDto } from './team-setup.dto';
@@ -15,7 +15,7 @@ export class TeamSetupService {
     try {
       const teamRepository = queryRunner.manager.getRepository(Team);
       const playerRepository = queryRunner.manager.getRepository(Player);
-      const matchRepository = queryRunner.manager.getRepository(Matches);
+      const matchRepository = queryRunner.manager.getRepository(Match);
       const matchPlayerRepository = queryRunner.manager.getRepository(MatchPlayer);
 
       // Check if match exists
@@ -143,13 +143,74 @@ export class TeamSetupService {
     }
   }
 
+  static async updateTeamSetup(matchId: string, teamId: number, data: TeamSetupDto) {
+    const queryRunner = AppDataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const matchRepository = queryRunner.manager.getRepository(Match);
+      const matchPlayerRepository = queryRunner.manager.getRepository(MatchPlayer);
+
+      const match = await matchRepository.findOne({ where: { id: matchId } });
+
+      if (!match) {
+        throw { status: HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
+      }
+
+      if (match.team_a_id !== teamId && match.team_b_id !== teamId) {
+        throw { status: HTTP_STATUS.BAD_REQUEST, message: 'Team not assigned to this match' };
+      }
+
+      // Delete existing match players for this team
+      await matchPlayerRepository.delete({ match_id: matchId, team_id: teamId });
+
+      // Add updated match players (only existing players with id)
+      const playerResults = [];
+      
+      for (const playerData of data.players) {
+        if (!playerData.id) {
+          throw { status: HTTP_STATUS.BAD_REQUEST, message: 'Player ID is required for update' };
+        }
+
+        const matchPlayer = matchPlayerRepository.create({
+          match_id: matchId,
+          player_id: playerData.id,
+          team_id: teamId,
+          role: playerData.role
+        });
+        
+        await matchPlayerRepository.save(matchPlayer);
+        
+        playerResults.push({
+          playerId: playerData.id,
+          name: playerData.name,
+          role: playerData.role
+        });
+      }
+
+      await queryRunner.commitTransaction();
+
+      return {
+        matchId,
+        teamId,
+        players: playerResults
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   static async deleteTeamSetup(matchId: string, teamId: number) {
     const queryRunner = AppDataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      const matchRepository = queryRunner.manager.getRepository(Matches);
+      const matchRepository = queryRunner.manager.getRepository(Match);
       const matchPlayerRepository = queryRunner.manager.getRepository(MatchPlayer);
 
       const match = await matchRepository.findOne({ where: { id: matchId } });

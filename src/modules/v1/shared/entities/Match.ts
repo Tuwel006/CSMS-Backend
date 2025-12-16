@@ -10,6 +10,12 @@ import {
 import { Team } from './Team';
 import { Tenant } from './Tenant';
 
+export enum MatchFormat {
+  T20 = 'T20',
+  ODI = 'ODI',
+  TEST = 'TEST',
+}
+
 @Entity('matches')
 export class Match {
   @PrimaryColumn()
@@ -39,9 +45,36 @@ export class Match {
   @Column()
   tenant_id: number;
 
+  @Column({ nullable: true })
+  toss_winner_team_id: number;
+
+  @Column({ nullable: true })
+  batting_first_team_id: number;
+
+  @Column({ nullable: true })
+  winner_team_id: number;
+
+  @Column({ nullable: true })
+  man_of_the_match_player_id: number;
+
+  @Column({ nullable: true })
+  result_description: string;
+
   @ManyToOne(() => Team)
   @JoinColumn({ name: 'team_a_id' })
   teamA: Team;
+
+  @ManyToOne(() => Team)
+  @JoinColumn({ name: 'winner_team_id' })
+  winner: Team;
+
+  @ManyToOne(() => Team)
+  @JoinColumn({ name: 'toss_winner_team_id' })
+  tossWinner: Team;
+
+  @ManyToOne(() => Team)
+  @JoinColumn({ name: 'batting_first_team_id' })
+  battingFirst: Team;
 
   @ManyToOne(() => Team)
   @JoinColumn({ name: 'team_b_id' })

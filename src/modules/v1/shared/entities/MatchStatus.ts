@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
-import { Matches } from './Matches';
+import { Match } from './Match';
 
 @Entity('match_status')
 @Index(['match_id', 'innings_no'], { unique: true })
@@ -52,9 +52,9 @@ export class MatchStatus {
   @Column({ default: 0 })
   penalties: number;
 
-  @ManyToOne(() => Matches, { createForeignKeyConstraints: false })
+  @ManyToOne(() => Match, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'match_id' })
-  match: Matches;
+  match: Match;
 
   @CreateDateColumn()
   createdAt: Date;

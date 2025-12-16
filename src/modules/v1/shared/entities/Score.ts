@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, BeforeInsert, CreateDateColumn, Index } from 'typeorm';
 import { AppDataSource } from '../../../../config/db';
-import { Matches } from './Matches';
+import { Match } from './Match';
 import { Player } from './Player';
 
 export enum ExtraType {
@@ -69,9 +69,9 @@ export class Score {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @ManyToOne(() => Matches, { createForeignKeyConstraints: false })
+  @ManyToOne(() => Match, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'match_id' })
-  match: Matches;
+  match: Match;
 
   @ManyToOne(() => Player, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'batsman_id' })

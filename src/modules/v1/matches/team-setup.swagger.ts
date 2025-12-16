@@ -174,6 +174,166 @@ export const teamSetupPaths = {
     }
   },
   '/api/v1/matches/team-setup/{matchId}/{teamId}': {
+    patch: {
+      summary: 'Update team setup for a match',
+      description: 'Updates team players and their roles for a specific team in a match',
+      tags: ['Matches'],
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'matchId',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: 'Match ID',
+          example: 'match_123'
+        },
+        {
+          name: 'teamId',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer' },
+          description: 'Team ID',
+          example: 1
+        }
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['team', 'players'],
+              properties: {
+                team: {
+                  type: 'object',
+                  required: ['name', 'location'],
+                  properties: {
+                    id: {
+                      type: 'integer',
+                      description: 'Team ID',
+                      example: 1
+                    },
+                    name: {
+                      type: 'string',
+                      description: 'Team name',
+                      example: 'Mumbai Warriors'
+                    },
+                    location: {
+                      type: 'string',
+                      description: 'Team location',
+                      example: 'Mumbai, India'
+                    }
+                  }
+                },
+                players: {
+                  type: 'array',
+                  minItems: 1,
+                  items: {
+                    type: 'object',
+                    required: ['id', 'name', 'role'],
+                    properties: {
+                      id: {
+                        type: 'integer',
+                        description: 'Player ID (required for update)',
+                        example: 1
+                      },
+                      name: {
+                        type: 'string',
+                        description: 'Player name',
+                        example: 'Virat Kohli'
+                      },
+                      role: {
+                        type: 'string',
+                        description: 'Player role',
+                        example: 'Captain'
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            example: {
+              team: {
+                id: 1,
+                name: 'Mumbai Warriors',
+                location: 'Mumbai, India'
+              },
+              players: [
+                {
+                  id: 1,
+                  name: 'Virat Kohli',
+                  role: 'Captain'
+                },
+                {
+                  id: 2,
+                  name: 'Rohit Sharma',
+                  role: 'Wicket Keeper'
+                }
+              ]
+            }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Team setup updated successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  status: { type: 'integer', example: 200 },
+                  message: { type: 'string', example: 'Team setup updated successfully' },
+                  data: {
+                    type: 'object',
+                    properties: {
+                      matchId: { type: 'string', example: 'match_123' },
+                      teamId: { type: 'integer', example: 1 },
+                      players: {
+                        type: 'array',
+                        items: {
+                          type: 'object',
+                          properties: {
+                            playerId: { type: 'integer', example: 1 },
+                            name: { type: 'string', example: 'Virat Kohli' },
+                            role: { type: 'string', example: 'Captain' }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        400: {
+          description: 'Team not assigned to this match',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        404: {
+          description: 'Match not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        401: {
+          description: 'Unauthorized',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    },
     delete: {
       summary: 'Delete team setup from a match',
       description: 'Removes team assignment and all associated players from a match',

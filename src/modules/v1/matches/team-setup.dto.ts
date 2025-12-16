@@ -3,7 +3,7 @@ export interface TeamSetupDto {
   team: {
     id?: number;
     name: string;
-    location: string;
+    location?: string;
   };
   players: Array<{
     id?: number;

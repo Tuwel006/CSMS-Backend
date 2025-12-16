@@ -32,6 +32,34 @@ export class TeamSetupController {
     }
   }
 
+  static async updateTeamSetup(req: Request, res: Response) {
+    try {
+      const { matchId, teamId } = req.params;
+      const updateData: TeamSetupDto = req.body;
+      
+      const result = await TeamSetupService.updateTeamSetup(matchId, Number(teamId), updateData);
+      
+      const response = ApiResponse.success(result, 'Team setup updated successfully');
+      res.status(response.status).json(response);
+    } catch (error: any) {
+      const status = error.status || HTTP_STATUS.BAD_REQUEST;
+      let errorResponse;
+      
+      switch (status) {
+        case HTTP_STATUS.NOT_FOUND:
+          errorResponse = ApiResponse.notFound(error.message);
+          break;
+        case HTTP_STATUS.BAD_REQUEST:
+          errorResponse = ApiResponse.badRequest(error.message);
+          break;
+        default:
+          errorResponse = ApiResponse.serverError(error.message);
+      }
+      
+      res.status(errorResponse.status).json(errorResponse);
+    }
+  }
+
   static async deleteTeamSetup(req: Request, res: Response) {
     try {
       const { matchId, teamId } = req.params;

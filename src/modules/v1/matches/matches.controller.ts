@@ -142,4 +142,24 @@ export class MatchesController {
             res.status(errorResponse.status).json(errorResponse);
         }
     }
+
+    static async getCurrentCreatedMatch(req: AuthRequest, res: Response) {
+        try {
+            const matchId = req.params.id;
+            const tenantId = req.user?.tenantId;
+
+            if (!tenantId) {
+                const response = ApiResponse.forbidden('Tenant ID is required');
+                return res.status(response.status).json(response);
+            }
+
+            const match = await MatchesService.getCurrentCreatedMatch(matchId, tenantId);
+
+            const response = ApiResponse.success(match, 'Match details retrieved successfully');
+            res.status(response.status).json(response);
+        } catch (error: any) {
+            const errorResponse = ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
 }

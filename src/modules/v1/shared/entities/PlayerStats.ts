@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
-import { Matches } from './Matches';
+import { Match } from './Match';
 import { Player } from './Player';
 
 @Entity('player_stats')
@@ -59,9 +59,9 @@ export class PlayerStats {
   @Column({ default: 0 })
   stumpings: number;
 
-  @ManyToOne(() => Matches, { createForeignKeyConstraints: false })
+  @ManyToOne(() => Match, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'match_id' })
-  match: Matches;
+  match: Match;
 
   @ManyToOne(() => Player, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'player_id' })

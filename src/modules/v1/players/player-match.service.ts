@@ -1,7 +1,7 @@
 import { AppDataSource } from '../../../config/db';
 import { MatchPlayer } from '../shared/entities/MatchPlayer';
 import { PlayerStats } from '../shared/entities/PlayerStats';
-import { MatchFormat } from '../shared/entities/Matches';
+import { MatchFormat } from '../shared/entities/Match';
 import { Between, In } from 'typeorm';
 
 export class PlayerMatchService {

@@ -2,6 +2,109 @@ import { teamSetupPaths } from './team-setup.swagger';
 
 export const matchesPaths = {
     ...teamSetupPaths,
+    '/api/v1/matches/current/{id}': {
+        get: {
+            summary: 'Get current created match with players',
+            description: 'Retrieves match details with team information and player lists (id, name, role)',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'Match ID'
+                }
+            ],
+            responses: {
+                200: {
+                    description: 'Match details with players',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    status: { type: 'integer', example: 200 },
+                                    message: { type: 'string', example: 'Match details retrieved successfully' },
+                                    data: {
+                                        type: 'object',
+                                        properties: {
+                                            id: { type: 'string', example: 'CSMSMATCH123456' },
+                                            teamA: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: { type: 'integer', example: 1 },
+                                                    name: { type: 'string', example: 'Mumbai Warriors' },
+                                                    players: {
+                                                        type: 'array',
+                                                        items: {
+                                                            type: 'object',
+                                                            properties: {
+                                                                id: { type: 'integer', example: 1 },
+                                                                name: { type: 'string', example: 'John Doe' },
+                                                                role: { type: 'string', example: 'Batsman' }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            teamB: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: { type: 'integer', example: 2 },
+                                                    name: { type: 'string', example: 'Delhi Capitals' },
+                                                    players: {
+                                                        type: 'array',
+                                                        items: {
+                                                            type: 'object',
+                                                            properties: {
+                                                                id: { type: 'integer', example: 2 },
+                                                                name: { type: 'string', example: 'Jane Smith' },
+                                                                role: { type: 'string', example: 'Bowler' }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            match_date: { type: 'string', format: 'date-time' },
+                                            format: { type: 'string', example: 'T20' },
+                                            venue: { type: 'string', example: 'Wankhede Stadium' },
+                                            status: { type: 'string', example: 'SCHEDULED' }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                404: {
+                    description: 'Match not found',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                401: {
+                    description: 'Unauthorized',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                403: {
+                    description: 'Forbidden',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                }
+            }
+        }
+    },
     '/api/v1/matches/generate-token': {
         post: {
             summary: 'Generate a match token',

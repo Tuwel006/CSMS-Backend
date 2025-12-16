@@ -125,6 +125,8 @@ export class DatabaseSeeder {
 
   private static async seedGlobalAdmin() {
     const userRepository = AppDataSource.getRepository(User);
+    const tenantRepository = AppDataSource.getRepository(Tenant);
+    const planRepository = AppDataSource.getRepository(Plan);
     
     const adminData = {
       username: 'globaladmin',
@@ -133,11 +135,31 @@ export class DatabaseSeeder {
       is_global_admin: true
     };
 
-    const existing = await userRepository.findOne({ where: { email: adminData.email } });
-    if (!existing) {
-      const admin = userRepository.create(adminData);
-      await userRepository.save(admin);
+    let admin = await userRepository.findOne({ where: { email: adminData.email } });
+    if (!admin) {
+      admin = userRepository.create(adminData);
+      admin = await userRepository.save(admin);
       console.log('👑 Created global admin user');
+    }
+
+    // Create default tenant for admin
+    const freePlan = await planRepository.findOne({ where: { name: 'Free' } });
+    const defaultTenantData = {
+      name: 'Default Admin Tenant',
+      owner_user_id: admin.id,
+      plan_id: freePlan?.id
+    };
+
+    let defaultTenant = await tenantRepository.findOne({ where: { name: defaultTenantData.name } });
+    if (!defaultTenant) {
+      defaultTenant = tenantRepository.create(defaultTenantData);
+      defaultTenant = await tenantRepository.save(defaultTenant);
+      
+      // Assign tenant to admin user
+      admin.tenant_id = defaultTenant.id;
+      await userRepository.save(admin);
+      
+      console.log('🏢 Created default tenant for admin');
     }
   }
 
