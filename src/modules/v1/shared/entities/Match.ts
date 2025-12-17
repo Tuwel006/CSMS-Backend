@@ -27,7 +27,7 @@ export class Match {
   @Column({ nullable: true })
   team_b_id: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   match_date: Date;
 
   @Column({ nullable: true })
@@ -59,6 +59,12 @@ export class Match {
 
   @Column({ nullable: true })
   result_description: string;
+
+  @Column({ nullable: true })
+  umpire_1: string;
+
+  @Column({ nullable: true })
+  umpire_2: string;
 
   @ManyToOne(() => Team)
   @JoinColumn({ name: 'team_a_id' })

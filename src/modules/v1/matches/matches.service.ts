@@ -140,6 +140,8 @@ export class MatchesService {
             format: match.format,
             venue: match.venue,
             status: match.status,
+            umpire_1: match.umpire_1,
+            umpire_2: match.umpire_2,
             man_of_the_match: manOfTheMatchPlayer ? {
                 id: manOfTheMatchPlayer.player.id,
                 name: manOfTheMatchPlayer.player.full_name
@@ -165,5 +167,24 @@ export class MatchesService {
                 }))
             } : null
         };
+    }
+
+    static async scheduleMatch(matchId: string, scheduleData: any, tenant_id: number) {
+        console.log('Scheduling match with data in service:', scheduleData);
+        const matchRepository = AppDataSource.getRepository(Match);
+
+        const match = await matchRepository.findOne({ where: { id: matchId, tenant_id } });
+        if (!match) {
+            throw { status: HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
+        }
+
+        match.venue = scheduleData.venue;
+        match.match_date = scheduleData.match_date;
+        match.format = scheduleData.format;
+        match.umpire_1 = scheduleData.umpire_1;
+        match.umpire_2 = scheduleData.umpire_2;
+        match.status = 'SCHEDULED';
+
+        return await matchRepository.save(match);
     }
 }

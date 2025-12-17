@@ -162,4 +162,26 @@ export class MatchesController {
             res.status(errorResponse.status).json(errorResponse);
         }
     }
+
+    static async scheduleMatch(req: AuthRequest, res: Response) {
+        try {
+            console.log('Scheduling match with data:', req.body);
+            const matchId = req.params.id;
+            const scheduleData = req.body;
+            const tenantId = req.user?.tenantId;
+
+            if (!tenantId) {
+                const response = ApiResponse.forbidden('Tenant ID is required');
+                return res.status(response.status).json(response);
+            }
+
+            const match = await MatchesService.scheduleMatch(matchId, scheduleData, tenantId);
+
+            const response = ApiResponse.success(match, 'Match scheduled successfully');
+            res.status(response.status).json(response);
+        } catch (error: any) {
+            const errorResponse = ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
 }

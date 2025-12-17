@@ -2,6 +2,110 @@ import { teamSetupPaths } from './team-setup.swagger';
 
 export const matchesPaths = {
     ...teamSetupPaths,
+    '/api/v1/matches/schedule/{id}': {
+        patch: {
+            summary: 'Schedule a match',
+            description: 'Updates match with schedule details including venue, date, time, format, and umpires',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'Match ID'
+                }
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            required: ['venue', 'match_date', 'format'],
+                            properties: {
+                                venue: {
+                                    type: 'string',
+                                    example: 'Wankhede Stadium, Mumbai'
+                                },
+                                match_date: {
+                                    type: 'string',
+                                    format: 'date-time',
+                                    example: '2024-01-15T14:30:00Z'
+                                },
+                                format: {
+                                    type: 'string',
+                                    enum: ['T20', 'ODI', 'TEST'],
+                                    example: 'T20'
+                                },
+                                umpire_1: {
+                                    type: 'string',
+                                    example: 'John Doe'
+                                },
+                                umpire_2: {
+                                    type: 'string',
+                                    example: 'Jane Smith'
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            responses: {
+                200: {
+                    description: 'Match scheduled successfully',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    status: { type: 'integer', example: 200 },
+                                    message: { type: 'string', example: 'Match scheduled successfully' },
+                                    data: {
+                                        type: 'object',
+                                        properties: {
+                                            id: { type: 'string', example: 'CSMSMATCH123456' },
+                                            venue: { type: 'string', example: 'Wankhede Stadium, Mumbai' },
+                                            match_date: { type: 'string', format: 'date-time' },
+                                            format: { type: 'string', example: 'T20' },
+                                            umpire_1: { type: 'string', example: 'John Doe' },
+                                            umpire_2: { type: 'string', example: 'Jane Smith' },
+                                            status: { type: 'string', example: 'SCHEDULED' }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                404: {
+                    description: 'Match not found',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                401: {
+                    description: 'Unauthorized',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                403: {
+                    description: 'Forbidden',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                }
+            }
+        }
+    },
     '/api/v1/matches/current/{id}': {
         get: {
             summary: 'Get current created match with players',

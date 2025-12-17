@@ -15,6 +15,7 @@ router.delete('/team-setup/:matchId/:teamId', TeamSetupController.deleteTeamSetu
 router.post('/generate-token', MatchesController.generateMatchToken);
 router.delete('/delete-token/:id', MatchesController.deleteMatchToken);
 router.get('/current/:id', MatchesController.getCurrentCreatedMatch);
+router.patch('/schedule/:id', MatchesController.scheduleMatch);
 router.post('/', MatchesController.createMatch);
 router.get('/', MatchesController.getMatches);
 router.get('/:id', MatchesController.getMatchById);
