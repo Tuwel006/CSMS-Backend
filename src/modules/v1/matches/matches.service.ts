@@ -3,7 +3,7 @@ import { Match } from '../shared/entities/Match';
 import { Team } from '../shared/entities/Team';
 import { MatchPlayer } from '../shared/entities/MatchPlayer';
 import { TeamService } from '../teams/team.service';
-import { CreateMatchDto, UpdateMatchDto } from './matches.dto';
+import { CreateMatchDto, MatchStartDto, UpdateMatchDto } from './matches.dto';
 import { HTTP_STATUS } from '../../../constants/status-codes';
 
 export class MatchesService {
@@ -170,7 +170,6 @@ export class MatchesService {
     }
 
     static async scheduleMatch(matchId: string, scheduleData: any, tenant_id: number) {
-        console.log('Scheduling match with data in service:', scheduleData);
         const matchRepository = AppDataSource.getRepository(Match);
 
         const match = await matchRepository.findOne({ where: { id: matchId, tenant_id } });
@@ -186,5 +185,64 @@ export class MatchesService {
         match.status = 'SCHEDULED';
 
         return await matchRepository.save(match);
+    }
+
+    static async startMatch(matchId: string, startData: MatchStartDto, tenant_id: number) {
+        const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try {
+            const matchRepository = queryRunner.manager.getRepository(Match);
+            const matchPlayerRepository = queryRunner.manager.getRepository(MatchPlayer);
+
+            const match = await matchRepository.findOne({ where: { id: matchId, tenant_id } });
+            if (!match) {
+                throw { status: HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
+            }
+
+            // Update match with toss and batting info
+            match.toss_winner_team_id = startData.toss_winner_team_id;
+            match.batting_first_team_id = startData.batting_first_team_id;
+            match.format = startData.over.toString();
+            match.status = 'LIVE';
+            await matchRepository.save(match);
+
+            // Update playing 11 for both teams
+            const allPlayingIds = [...startData.teamA.playing_11_id, ...startData.teamB.playing_11_id];
+            
+            await matchPlayerRepository
+                .createQueryBuilder()
+                .update(MatchPlayer)
+                .set({ is_playing11: true })
+                .where('match_id = :matchId AND player_id IN (:...playerIds)', {
+                    matchId,
+                    playerIds: allPlayingIds
+                })
+                .execute();
+
+            // Update captain roles
+            const captainIds = [startData.teamA.captain_id, startData.teamB.captain_id];
+            
+            for (const captainId of captainIds) {
+                const captainPlayer = await matchPlayerRepository.findOne({
+                    where: { match_id: matchId, player_id: captainId }
+                });
+                
+                if (captainPlayer) {
+                    const currentRole = captainPlayer.role || '';
+                    captainPlayer.role = currentRole ? `${currentRole}|Captain` : 'Captain';
+                    await matchPlayerRepository.save(captainPlayer);
+                }
+            }
+
+            await queryRunner.commitTransaction();
+            return match;
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+        } finally {
+            await queryRunner.release();
+        }
     }
 }

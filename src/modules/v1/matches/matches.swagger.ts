@@ -2,6 +2,158 @@ import { teamSetupPaths } from './team-setup.swagger';
 
 export const matchesPaths = {
     ...teamSetupPaths,
+    '/api/v1/matches/start/{id}': {
+        patch: {
+            summary: 'Start a match',
+            description: 'Starts a match by setting toss winner, batting first team, and marking playing 11 players. Updates match status to LIVE.',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'Match ID'
+                }
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            required: ['toss_winner_team_id', 'batting_first_team_id', 'over', 'teamA', 'teamB'],
+                            properties: {
+                                toss_winner_team_id: {
+                                    type: 'integer',
+                                    example: 1,
+                                    description: 'ID of the team that won the toss'
+                                },
+                                batting_first_team_id: {
+                                    type: 'integer',
+                                    example: 1,
+                                    description: 'ID of the team that will bat first'
+                                },
+                                over: {
+                                    type: 'integer',
+                                    example: 20,
+                                    description: 'Number of overs for the match (overwrites format field)'
+                                },
+                                teamA: {
+                                    type: 'object',
+                                    required: ['id', 'playing_11_id', 'captain_id'],
+                                    properties: {
+                                        id: {
+                                            type: 'integer',
+                                            example: 1,
+                                            description: 'Team A ID'
+                                        },
+                                        playing_11_id: {
+                                            type: 'array',
+                                            items: { type: 'integer' },
+                                            example: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                                            description: 'Array of player IDs for Team A playing 11'
+                                        },
+                                        captain_id: {
+                                            type: 'integer',
+                                            example: 1,
+                                            description: 'Player ID of Team A captain'
+                                        }
+                                    }
+                                },
+                                teamB: {
+                                    type: 'object',
+                                    required: ['id', 'playing_11_id', 'captain_id'],
+                                    properties: {
+                                        id: {
+                                            type: 'integer',
+                                            example: 2,
+                                            description: 'Team B ID'
+                                        },
+                                        playing_11_id: {
+                                            type: 'array',
+                                            items: { type: 'integer' },
+                                            example: [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
+                                            description: 'Array of player IDs for Team B playing 11'
+                                        },
+                                        captain_id: {
+                                            type: 'integer',
+                                            example: 12,
+                                            description: 'Player ID of Team B captain'
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            responses: {
+                200: {
+                    description: 'Match started successfully',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    status: { type: 'integer', example: 200 },
+                                    message: { type: 'string', example: 'Match started successfully' },
+                                    data: {
+                                        type: 'object',
+                                        properties: {
+                                            id: { type: 'string', example: 'CSMSMATCH123456' },
+                                            toss_winner_team_id: { type: 'integer', example: 1 },
+                                            batting_first_team_id: { type: 'integer', example: 1 },
+                                            status: { type: 'string', example: 'LIVE' },
+                                            team_a_id: { type: 'integer', example: 1 },
+                                            team_b_id: { type: 'integer', example: 2 },
+                                            match_date: { type: 'string', format: 'date-time' },
+                                            format: { type: 'string', example: 'T20' },
+                                            venue: { type: 'string', example: 'Wankhede Stadium, Mumbai' },
+                                            updatedAt: { type: 'string', format: 'date-time' }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                404: {
+                    description: 'Match not found',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                400: {
+                    description: 'Bad request - Invalid data or transaction failed',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                401: {
+                    description: 'Unauthorized',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                403: {
+                    description: 'Forbidden',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                }
+            }
+        }
+    },
     '/api/v1/matches/schedule/{id}': {
         patch: {
             summary: 'Schedule a match',

@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { AppDataSource } from '../../../../config/db';
 import { User } from '../../shared/entities/User';
+import { Match } from '../../shared/entities/Match';
 import { AUTH_MESSAGES } from '../../../../constants/messages';
 import { HTTP_STATUS } from '../../../../constants/status-codes';
 
@@ -51,6 +52,8 @@ export class AuthService {
 
   static async login(email: string, password: string) {
     const userRepository = AppDataSource.getRepository(User);
+    const matchRepository = AppDataSource.getRepository(Match);
+    
     const user = await userRepository.findOne({ where: { email } });
     if (!user) throw new Error(AUTH_MESSAGES.INVALID_CREDENTIALS);
 
@@ -58,7 +61,6 @@ export class AuthService {
     if (!validPassword) throw new Error(AUTH_MESSAGES.INVALID_CREDENTIALS);
 
     const expiresIn = 7 * 24 * 60 * 60; // 7 days in seconds
-    // const exp = Math.floor(Date.now() / 1000) + expiresIn;
     
     const token = jwt.sign(
       { 
@@ -66,13 +68,23 @@ export class AuthService {
         email: user.email, 
         isGlobalAdmin: user.is_global_admin, 
         tenantId: user.tenant_id,
-        // exp
       },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    return { token, user };
+    let activeMatchId = null;
+    if (user.tenant_id) {
+      const activeMatch = await matchRepository.findOne({
+        where: { 
+          tenant_id: user.tenant_id, 
+          is_active: true 
+        },
+        select: ['id']
+      });
+      activeMatchId = activeMatch?.id || null;
+    }
+    return { token, user, activeMatchId };
   }
 
   static verifyToken(token: string) {

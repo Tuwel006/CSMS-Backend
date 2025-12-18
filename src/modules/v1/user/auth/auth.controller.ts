@@ -19,7 +19,7 @@ export class UserAuthController {
   static async login(req: Request<{}, {}, LoginDto>, res: Response) {
     try {
       const { email, password }: LoginDto = req.body;
-      const { token, user } = await AuthService.login(email, password);
+      const { token, user, activeMatchId } = await AuthService.login(email, password);
       
       res.cookie('token', token, {
         httpOnly: true,
@@ -27,7 +27,7 @@ export class UserAuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
       
-      const response = ApiResponse.success({ token, user }, 'Login successful');
+      const response = ApiResponse.success({ token, user, activeMatchId }, 'Login successful');
       res.status(response.status).json(response);
     } catch (error: any) {
       const errorResponse = ApiResponse.unauthorized(error.message);
