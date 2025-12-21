@@ -205,4 +205,140 @@ export class MatchesController {
             res.status(errorResponse.status).json(errorResponse);
         }
     }
+
+    static async getMatchScore(req: AuthRequest, res: Response) {
+        try {
+            const matchId = req.params.id;
+            const tenantId = req.user?.tenantId;
+
+            if (!tenantId) {
+                const response = ApiResponse.forbidden('Tenant ID is required');
+                return res.status(response.status).json(response);
+            }
+
+            const scoreData = await MatchesService.getMatchScore(matchId, tenantId);
+            res.status(200).json(scoreData);
+        } catch (error: any) {
+            const errorResponse = ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+
+    static async getAvailableBatsmen(req: AuthRequest, res: Response) {
+        try {
+            const matchId = req.params.id;
+            const inningsNumber = parseInt(req.params.inningsNumber);
+            const tenantId = req.user?.tenantId;
+
+            if (!tenantId) {
+                const response = ApiResponse.forbidden('Tenant ID is required');
+                return res.status(response.status).json(response);
+            }
+
+            const result = await MatchesService.getAvailableBatsmen(matchId, inningsNumber, tenantId);
+            res.status(200).json(result);
+        } catch (error: any) {
+            const errorResponse = ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+
+    static async getBowlingTeamPlayers(req: AuthRequest, res: Response) {
+        try {
+            const matchId = req.params.id;
+            const inningsNumber = parseInt(req.params.inningsNumber);
+            const tenantId = req.user?.tenantId;
+
+            if (!tenantId) {
+                const response = ApiResponse.forbidden('Tenant ID is required');
+                return res.status(response.status).json(response);
+            }
+
+            const result = await MatchesService.getBowlingTeamPlayers(matchId, inningsNumber, tenantId);
+            res.status(200).json(result);
+        } catch (error: any) {
+            const errorResponse = ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+
+    static async recordBall(req: AuthRequest, res: Response) {
+        try {
+            const matchId = req.params.id;
+            const ballData = req.body;
+            const tenantId = req.user?.tenantId;
+
+            if (!tenantId) {
+                const response = ApiResponse.forbidden('Tenant ID is required');
+                return res.status(response.status).json(response);
+            }
+
+            const result = await MatchesService.recordBall(matchId, ballData, tenantId);
+            const response = ApiResponse.success(result, 'Ball recorded successfully');
+            res.status(response.status).json(response);
+        } catch (error: any) {
+            const errorResponse = ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+
+    static async completeMatch(req: AuthRequest, res: Response) {
+        try {
+            const matchId = req.params.id;
+            const tenantId = req.user?.tenantId;
+
+            if (!tenantId) {
+                const response = ApiResponse.forbidden('Tenant ID is required');
+                return res.status(response.status).json(response);
+            }
+
+            const result = await MatchesService.completeMatch(matchId, tenantId);
+            const response = ApiResponse.success(result, 'Match completed successfully');
+            res.status(response.status).json(response);
+        } catch (error: any) {
+            const errorResponse = ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+
+    static async setBatsman(req: AuthRequest, res: Response) {
+        try {
+            const matchId = req.params.id;
+            const batsmanData = req.body;
+            const tenantId = req.user?.tenantId;
+
+            if (!tenantId) {
+                const response = ApiResponse.forbidden('Tenant ID is required');
+                return res.status(response.status).json(response);
+            }
+
+            const result = await MatchesService.setBatsman(matchId, batsmanData, tenantId);
+            const response = ApiResponse.success(result, 'Batsman set successfully');
+            res.status(response.status).json(response);
+        } catch (error: any) {
+            const errorResponse = ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+
+    static async setBowler(req: AuthRequest, res: Response) {
+        try {
+            const matchId = req.params.id;
+            const bowlerData = req.body;
+            const tenantId = req.user?.tenantId;
+
+            if (!tenantId) {
+                const response = ApiResponse.forbidden('Tenant ID is required');
+                return res.status(response.status).json(response);
+            }
+
+            const result = await MatchesService.setBowler(matchId, bowlerData, tenantId);
+            const response = ApiResponse.success(result, 'Bowler set successfully');
+            res.status(response.status).json(response);
+        } catch (error: any) {
+            const errorResponse = ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+
 }

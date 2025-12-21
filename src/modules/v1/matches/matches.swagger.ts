@@ -2,6 +2,103 @@ import { teamSetupPaths } from './team-setup.swagger';
 
 export const matchesPaths = {
     ...teamSetupPaths,
+    '/api/v1/matches/{id}/score': {
+        get: {
+            summary: 'Get live match score',
+            description: 'Retrieves live match score with teams, commentary, and innings data',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'Match ID'
+                }
+            ],
+            responses: {
+                200: {
+                    description: 'Live match score data',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    success: { type: 'boolean', example: true },
+                                    meta: {
+                                        type: 'object',
+                                        properties: {
+                                            matchId: { type: 'string', example: 'CSMSMATCH123456' },
+                                            format: { type: 'string', example: 'T20' },
+                                            status: { type: 'string', example: 'LIVE' },
+                                            lastUpdated: { type: 'string', format: 'date-time' }
+                                        }
+                                    },
+                                    commentary: {
+                                        type: 'object',
+                                        properties: {
+                                            initial: { type: 'string', example: 'Match will start soon. Players are warming up.' },
+                                            latest: { type: 'string', example: 'Live commentary will appear here.' }
+                                        }
+                                    },
+                                    teams: {
+                                        type: 'object',
+                                        properties: {
+                                            A: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: { type: 'integer', example: 1 },
+                                                    name: { type: 'string', example: 'Mumbai Indians' },
+                                                    short: { type: 'string', example: 'MI' }
+                                                }
+                                            },
+                                            B: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: { type: 'integer', example: 2 },
+                                                    name: { type: 'string', example: 'Chennai Super Kings' },
+                                                    short: { type: 'string', example: 'CSK' }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    innings: {
+                                        type: 'array',
+                                        items: { type: 'object' }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                404: {
+                    description: 'Match not found',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                401: {
+                    description: 'Unauthorized',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                403: {
+                    description: 'Forbidden',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                }
+            }
+        }
+    },
     '/api/v1/matches/start/{id}': {
         patch: {
             summary: 'Start a match',
@@ -892,6 +989,181 @@ export const matchesPaths = {
                         }
                     }
                 }
+            }
+        }
+    },
+    '/api/v1/matches/{id}/innings/{inningsNumber}/available-batsmen': {
+        get: {
+            summary: 'Get available batsmen for next batting',
+            description: 'Returns players who haven\'t batted yet in the current innings',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
+                { name: 'inningsNumber', in: 'path', required: true, schema: { type: 'integer' } }
+            ],
+            responses: {
+                200: { description: 'Available batsmen list' }
+            }
+        }
+    },
+    '/api/v1/matches/{id}/innings/{inningsNumber}/bowling-team': {
+        get: {
+            summary: 'Get bowling team players',
+            description: 'Returns all bowling team players for assigning bowlers and fielders',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
+                { name: 'inningsNumber', in: 'path', required: true, schema: { type: 'integer' } }
+            ],
+            responses: {
+                200: { description: 'Bowling team players list' }
+            }
+        }
+    },
+    '/api/v1/matches/{id}/set-batsman': {
+        post: {
+            summary: 'Set batsman for innings',
+            description: 'Adds a new batsman to innings or marks existing batsman as retired hurt. Only allows if less than 2 current batsmen at crease.',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Match ID' }
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            required: ['innings_id', 'player_id'],
+                            properties: {
+                                innings_id: { type: 'integer', example: 1, description: 'Innings ID' },
+                                player_id: { type: 'integer', example: 101, description: 'Player ID of the batsman' },
+                                is_striker: { type: 'boolean', example: true, description: 'Whether this batsman is the striker (default: false)' },
+                                ret_hurt: { type: 'boolean', example: false, description: 'Mark existing batsman as retired hurt (default: false)' }
+                            }
+                        }
+                    }
+                }
+            },
+            responses: {
+                200: {
+                    description: 'Batsman set successfully',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    status: { type: 'integer', example: 200 },
+                                    message: { type: 'string', example: 'Batsman set successfully' },
+                                    data: {
+                                        type: 'object',
+                                        properties: {
+                                            success: { type: 'boolean', example: true },
+                                            message: { type: 'string', example: 'Batsman set successfully' }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                400: { description: 'Cannot add batsman - two batsmen already at crease' }
+            }
+        }
+    },
+    '/api/v1/matches/{id}/set-bowler': {
+        post: {
+            summary: 'Set bowler for innings',
+            description: 'Sets the current bowler for innings. Automatically deactivates previous bowler and creates bowling record if needed.',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Match ID' }
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            required: ['innings_id', 'player_id'],
+                            properties: {
+                                innings_id: { type: 'integer', example: 1, description: 'Innings ID' },
+                                player_id: { type: 'integer', example: 201, description: 'Player ID of the bowler' }
+                            }
+                        }
+                    }
+                }
+            },
+            responses: {
+                200: {
+                    description: 'Bowler set successfully',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    status: { type: 'integer', example: 200 },
+                                    message: { type: 'string', example: 'Bowler set successfully' },
+                                    data: {
+                                        type: 'object',
+                                        properties: {
+                                            success: { type: 'boolean', example: true },
+                                            message: { type: 'string', example: 'Bowler set successfully' }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    '/api/v1/matches/{id}/record-ball': {
+        post: {
+            summary: 'Record ball-by-ball scoring',
+            description: 'Records each ball delivery with automatic cricket logic',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            required: ['innings_id', 'ball_type', 'batsman_id', 'bowler_id'],
+                            properties: {
+                                innings_id: { type: 'integer', example: 1 },
+                                ball_type: { type: 'string', enum: ['RUN', 'FOUR', 'SIX', 'DOT', 'WICKET', 'WIDE', 'NO_BALL'], example: 'FOUR' },
+                                runs: { type: 'integer', example: 4 },
+                                batsman_id: { type: 'integer', example: 101 },
+                                bowler_id: { type: 'integer', example: 201 },
+                                is_wicket: { type: 'boolean', example: false },
+                                wicket_type: { type: 'string', example: 'CAUGHT' }
+                            }
+                        }
+                    }
+                }
+            },
+            responses: {
+                200: { description: 'Ball recorded successfully' }
+            }
+        }
+    },
+    '/api/v1/matches/{id}/complete': {
+        patch: {
+            summary: 'Complete match and archive data',
+            description: 'Marks match as completed and archives ball-by-ball data',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+            responses: {
+                200: { description: 'Match completed and data archived' }
             }
         }
     }

@@ -15,6 +15,13 @@ router.delete('/team-setup/:matchId/:teamId', TeamSetupController.deleteTeamSetu
 router.post('/generate-token', MatchesController.generateMatchToken);
 router.delete('/delete-token/:id', MatchesController.deleteMatchToken);
 router.get('/current/:id', MatchesController.getCurrentCreatedMatch);
+router.get('/:id/score', MatchesController.getMatchScore);
+router.get('/:id/innings/:inningsNumber/available-batsmen', MatchesController.getAvailableBatsmen);
+router.get('/:id/innings/:inningsNumber/bowling-team', MatchesController.getBowlingTeamPlayers);
+router.post('/:id/set-batsman', MatchesController.setBatsman);
+router.post('/:id/set-bowler', MatchesController.setBowler);
+router.post('/:id/record-ball', MatchesController.recordBall);
+router.patch('/:id/complete', MatchesController.completeMatch);
 router.patch('/schedule/:id', MatchesController.scheduleMatch);
 router.patch('/start/:id', MatchesController.startMatch);
 router.post('/', MatchesController.createMatch);
