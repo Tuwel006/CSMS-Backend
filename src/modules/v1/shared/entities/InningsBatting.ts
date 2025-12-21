@@ -30,6 +30,12 @@ export class InningsBatting {
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 0.00 })
   strike_rate: number;
 
+  @Column({ default: 0 })
+  fours: number;
+
+  @Column({ default: 0 })
+  sixes: number;
+
   @Column({ default: false })
   is_striker: boolean;
 

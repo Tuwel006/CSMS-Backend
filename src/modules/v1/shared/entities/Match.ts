@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Team } from './Team';
 import { Tenant } from './Tenant';
+import { MatchInnings } from './MatchInnings';
 
 export enum MatchFormat {
   T20 = 'T20',
@@ -65,6 +66,13 @@ export class Match {
 
   @Column({ nullable: true })
   umpire_2: string;
+
+  @Column({ nullable: true })
+  current_innings_id: number;
+
+  @ManyToOne(() => MatchInnings)
+  @JoinColumn({ name: 'current_innings_id' })
+  currentInnings: MatchInnings;
 
   @ManyToOne(() => Team)
   @JoinColumn({ name: 'team_a_id' })

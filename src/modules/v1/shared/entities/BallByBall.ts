@@ -49,6 +49,9 @@ export class BallByBall {
   @Column({ default: false })
   is_wicket: boolean;
 
+  @Column({ default: false })
+  is_boundary: boolean;
+
   @Column({ nullable: true })
   wicket_type: string;
 

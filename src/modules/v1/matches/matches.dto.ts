@@ -55,3 +55,13 @@ export interface MatchStartDto {
         captain_id: number;
     }
 }
+
+export interface RecordBallDto {
+    ball_type: string; // 'NORMAL', 'WIDE', 'NO_BALL', 'BYE', 'LEG_BYE', 'DOT'
+    runs: number;
+    batsman_id: number;
+    bowler_id: number;
+    is_wicket?: boolean;
+    wicket_type?: string; // 'BOWLED', 'CAUGHT', 'LBW', 'RUN_OUT', 'STUMPED'
+    is_boundary?: boolean;
+}

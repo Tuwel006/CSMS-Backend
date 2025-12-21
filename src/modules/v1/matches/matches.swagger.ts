@@ -1126,32 +1126,105 @@ export const matchesPaths = {
     '/api/v1/matches/{id}/record-ball': {
         post: {
             summary: 'Record ball-by-ball scoring',
-            description: 'Records each ball delivery with automatic cricket logic',
+            description: 'Records each ball delivery with runs, wickets, boundaries, and automatic cricket logic including striker rotation',
             tags: ['Matches'],
             security: [{ bearerAuth: [] }],
-            parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+            parameters: [{ 
+                name: 'id', 
+                in: 'path', 
+                required: true, 
+                schema: { type: 'string' },
+                description: 'Match ID'
+            }],
             requestBody: {
                 required: true,
                 content: {
                     'application/json': {
                         schema: {
                             type: 'object',
-                            required: ['innings_id', 'ball_type', 'batsman_id', 'bowler_id'],
+                            required: ['ball_type', 'batsman_id', 'bowler_id'],
                             properties: {
-                                innings_id: { type: 'integer', example: 1 },
-                                ball_type: { type: 'string', enum: ['RUN', 'FOUR', 'SIX', 'DOT', 'WICKET', 'WIDE', 'NO_BALL'], example: 'FOUR' },
-                                runs: { type: 'integer', example: 4 },
-                                batsman_id: { type: 'integer', example: 101 },
-                                bowler_id: { type: 'integer', example: 201 },
-                                is_wicket: { type: 'boolean', example: false },
-                                wicket_type: { type: 'string', example: 'CAUGHT' }
+                                ball_type: { 
+                                    type: 'string', 
+                                    enum: ['NORMAL', 'WIDE', 'NO_BALL', 'BYE', 'LEG_BYE', 'DOT'], 
+                                    example: 'NORMAL',
+                                    description: 'Type of ball delivered'
+                                },
+                                runs: { 
+                                    type: 'integer', 
+                                    minimum: 0,
+                                    example: 4,
+                                    description: 'Runs scored on this ball (0-6+)'
+                                },
+                                batsman_id: { 
+                                    type: 'integer', 
+                                    example: 101,
+                                    description: 'ID of batsman facing the ball'
+                                },
+                                bowler_id: { 
+                                    type: 'integer', 
+                                    example: 201,
+                                    description: 'ID of bowler delivering the ball'
+                                },
+                                is_wicket: { 
+                                    type: 'boolean', 
+                                    example: false,
+                                    description: 'Whether this ball resulted in a wicket'
+                                },
+                                wicket_type: { 
+                                    type: 'string', 
+                                    enum: ['BOWLED', 'CAUGHT', 'LBW', 'RUN_OUT', 'STUMPED'],
+                                    example: 'CAUGHT',
+                                    description: 'Type of dismissal (required if is_wicket is true)'
+                                },
+                                is_boundary: {
+                                    type: 'boolean',
+                                    example: true,
+                                    description: 'Whether runs were scored via boundary (not running). Used to track fours/sixes statistics.'
+                                }
                             }
                         }
                     }
                 }
             },
             responses: {
-                200: { description: 'Ball recorded successfully' }
+                200: {
+                    description: 'Ball recorded successfully',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    status: { type: 'integer', example: 200 },
+                                    message: { type: 'string', example: 'Ball recorded successfully' },
+                                    data: {
+                                        type: 'object',
+                                        properties: {
+                                            success: { type: 'boolean', example: true },
+                                            message: { type: 'string', example: 'Ball recorded successfully' }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                400: {
+                    description: 'Bad request - Invalid ball data or match not found',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                404: {
+                    description: 'Match or active innings not found',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                }
             }
         }
     },
