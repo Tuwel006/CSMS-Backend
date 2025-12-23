@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "start:stg": "ts-node-dev --respawn --transpile-only --env .env.staging src/server.ts",
+    "start:stg": "DOTENV_CONFIG_PATH=.env.stg ts-node-dev --respawn --transpile-only -r dotenv/config src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "ts-node src/seeders/index.ts",
