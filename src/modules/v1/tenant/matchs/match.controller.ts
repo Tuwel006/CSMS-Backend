@@ -50,7 +50,7 @@ export class MatchController {
     try {
       const matchId = parseInt(req.params.id);
       
-      const match = await MatchService.getMatchById(matchId);
+      const match = await MatchService.getMatchById(matchId.toString());
       
       const response = HTTP_RESPONSE.OK('Match retrieved successfully', match);
       res.status(response.status).json(response);
@@ -70,7 +70,7 @@ export class MatchController {
       const tenantId = req.user!.tenantId;
       const updateData = req.body;
       
-      const match = await MatchService.updateMatch(matchId, tenantId, updateData);
+      const match = await MatchService.updateMatch(matchId.toString(), tenantId, updateData);
       
       const response = HTTP_RESPONSE.UPDATED('Match updated successfully', match);
       res.status(response.status).json(response);
@@ -89,7 +89,7 @@ export class MatchController {
       const matchId = parseInt(req.params.id);
       const tenantId = req.user!.tenantId;
       
-      const result = await MatchService.deleteMatch(matchId, tenantId);
+      const result = await MatchService.deleteMatch(matchId.toString(), tenantId);
       
       const response = HTTP_RESPONSE.DELETED('Match deleted successfully', result);
       res.status(response.status).json(response);

@@ -30,7 +30,7 @@ export class PermissionService {
     });
 
     const effectivePermissions = new Map();
-    const limits = {};
+    const limits: any = {};
 
     planPermissions.forEach(pp => {
       const permName = pp.permission.name;
@@ -53,7 +53,7 @@ export class PermissionService {
       });
     });
 
-    const finalPermissions = [];
+    const finalPermissions: any = [];
     effectivePermissions.forEach((value, key) => {
       if (rolePermissions.has(key) && value.allowed) {
         finalPermissions.push({
@@ -78,7 +78,7 @@ export class PermissionService {
 
   static async checkPermission(userId: number, permissionName: string): Promise<boolean> {
     const { permissions } = await this.getUserEffectivePermissions(userId);
-    return permissions.some(p => p.name === permissionName);
+    return permissions.some((p:any) => p?.name === permissionName);
   }
 
   static async checkLimit(userId: number, permissionName: string, requestedAmount = 1): Promise<{ allowed: boolean; remaining: number }> {

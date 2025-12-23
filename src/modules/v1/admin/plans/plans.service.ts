@@ -41,7 +41,10 @@ export class PlansService {
     const planRepository = AppDataSource.getRepository(Plan);
     
     const result = await planRepository.delete(id);
-    return result.affected > 0;
+    if (result && result.affected && result.affected > 0) {
+      return true;
+    }
+    return false;
   }
 
   static async getActivePlans() {
