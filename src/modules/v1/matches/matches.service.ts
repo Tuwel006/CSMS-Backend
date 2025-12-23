@@ -493,9 +493,18 @@ export class MatchesService {
                 await bowlingRepository.save(bowler);
             }
 
-            // Handle striker rotation for odd runs or over completion
-            if ((runs % 2 === 1) || (isLegalBall && currentInnings.balls % 6 === 0)) {
+            // Handle striker rotation for odd runs (but not on over completion)
+            if ((runs % 2 === 1) && !(isLegalBall && currentInnings.balls % 6 === 0)) {
                 await this.flipStriker(currentInnings.id, tenant_id, queryRunner);
+            }
+
+            // Handle over completion: flip striker and reset current bowler
+            if (isLegalBall && currentInnings.balls % 6 === 0) {
+                await this.flipStriker(currentInnings.id, tenant_id, queryRunner);
+                await bowlingRepository.update(
+                    { innings_id: currentInnings.id, tenant_id },
+                    { is_current_bowler: false }
+                );
             }
 
             // Create ball record
