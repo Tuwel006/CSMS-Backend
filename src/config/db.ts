@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { User } from '../modules/v1/shared/entities/User';
-
 dotenv.config();
 
 export const AppDataSource = new DataSource({
@@ -12,11 +11,12 @@ export const AppDataSource = new DataSource({
     username: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
-    synchronize: true, // Auto-sync in development
+    synchronize: true,
     logging: false,
-    entities: [__dirname+"/../modules/v1/shared/entities/*.{ts,js}"],
-    migrations: [],
-    subscribers: [],
+    entities: [__dirname + '/../modules/v1/shared/entities/*.{ts,js}'],
+    ssl: {
+        rejectUnauthorized: false, // required for Railway
+    },
 });
 
 export const connectDB = async () => {
