@@ -49,10 +49,10 @@ export class InningsBatting {
   wicket_type: string;
 
   @Column({ nullable: true })
-  fielder_name: string;
+  fielder_id: number;
 
   @Column({ nullable: true })
-  bowler_name: string;
+  bowler_id: number;
 
   @Column({ type: 'decimal', precision: 4, scale: 1, nullable: true })
   dismissal_over: number;
@@ -67,6 +67,14 @@ export class InningsBatting {
   @ManyToOne(() => Player)
   @JoinColumn({ name: 'player_id' })
   player: Player;
+
+  @ManyToOne(() => Player)
+  @JoinColumn({ name: 'bowler_id' })
+  bowler: Player;
+
+  @ManyToOne(() => Player)
+  @JoinColumn({ name: 'fielder_id' })
+  fielder: Player;
 
   @CreateDateColumn()
   createdAt: Date;
