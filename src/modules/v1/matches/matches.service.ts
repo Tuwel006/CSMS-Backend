@@ -153,7 +153,7 @@ export class MatchesService {
                 name: match.teamA.name,
                 short_name: match.teamA.short_name,
                 is_toss_winner: match.toss_winner_team_id === match.team_a_id,
-                players: teamAPlayers.map(mp => ({
+                players: teamAPlayers.map((mp: any) => ({
                     id: mp.player.id,
                     name: mp.player.full_name,
                     role: mp.role
@@ -164,7 +164,7 @@ export class MatchesService {
                 name: match.teamB.name,
                 short_name: match.teamB.short_name,
                 is_toss_winner: match.toss_winner_team_id === match.team_b_id,
-                players: teamBPlayers.map(mp => ({
+                players: teamBPlayers.map((mp: any) => ({
                     id: mp.player.id,
                     name: mp.player.full_name,
                     role: mp.role
@@ -577,12 +577,12 @@ export class MatchesService {
             })
         ]);
 
-        const batsmenInInnings = new Set(currentBatsmen.map(b => b.player_id));
-        const availableBatsmen = battingTeamPlayers.filter(mp => !batsmenInInnings.has(mp.player_id));
+        const batsmenInInnings = new Set(currentBatsmen.map((b:any) => b.player_id));
+        const availableBatsmen = battingTeamPlayers.filter((mp:any) => !batsmenInInnings.has(mp.player_id));
 
         return {
             success: true,
-            data: availableBatsmen.map(mp => ({
+            data: availableBatsmen.map((mp:any) => ({
                 id: mp.player_id,
                 name: mp.player.full_name,
                 role: mp.role
@@ -609,7 +609,7 @@ export class MatchesService {
 
         return {
             success: true,
-            data: bowlingTeamPlayers.map(mp => ({
+            data: bowlingTeamPlayers.map((mp:any) => ({
                 id: mp.player_id,
                 name: mp.player.full_name,
                 role: mp.role
@@ -723,7 +723,7 @@ export class MatchesService {
             });
             
             if (ballData.length > 0) {
-                const historyData = ballData.map(ball => ({
+                const historyData = ballData.map((ball:any) => ({
                     match_id: ball.match_id,
                     innings_number: ball.innings?.innings_number || 1,
                     batting_team_id: ball.batting_team_id,
