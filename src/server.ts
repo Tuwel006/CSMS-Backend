@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
-import { insertBalls } from './modules/v1/shared/testData';
 dotenv.config();
 
 import app from './App';
