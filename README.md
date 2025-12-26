@@ -7,7 +7,7 @@ A comprehensive Customer Service Management System backend built with Node.js, E
 - **Authentication System**: User registration and login with JWT tokens
 - **Beautiful API Documentation**: Interactive Swagger UI documentation
 - **Type Safety**: Built with TypeScript for better development experience
-- **Database Integration**: Sequelize ORM with MySQL
+- **Database Integration**: Sequelize ORM with PostgreSQL
 - **Security**: Password hashing with bcrypt
 - **Error Handling**: Comprehensive error handling middleware
 

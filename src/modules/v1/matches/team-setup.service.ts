@@ -1,6 +1,6 @@
 import { AppDataSource } from '../../../config/db';
 import { Team } from '../shared/entities/Team';
-import { Player } from '../shared/entities/Player';
+import { Player, PlayerRole } from '../shared/entities/Player';
 import { Match } from '../shared/entities/Match';
 import { MatchPlayer } from '../shared/entities/MatchPlayer';
 import { HTTP_STATUS } from '../../../constants/status-codes';
@@ -95,7 +95,8 @@ export class TeamSetupService {
         
         if (!playerId) {
           const newPlayer = playerRepository.create({
-            full_name: playerData.name
+            full_name: playerData.name,
+            role: playerData.role as PlayerRole
           });
           const savedPlayer = await playerRepository.save(newPlayer);
           playerId = savedPlayer.id;

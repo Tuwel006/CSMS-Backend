@@ -28,7 +28,7 @@ export class Match {
   @Column({ nullable: true })
   team_b_id: number;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   match_date: Date;
 
   @Column({ nullable: true })
