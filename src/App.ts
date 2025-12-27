@@ -21,6 +21,15 @@ app.use(express.json());
 app.use(cookieParser());
 // app.use(bodyParser);
 
+// Root health check route
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'CSMS Backend is running',
+    uptime: process.uptime()
+  });
+});
+
 // Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
   customCss: '.swagger-ui .topbar { display: none }',
