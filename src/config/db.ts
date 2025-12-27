@@ -5,6 +5,7 @@ import { User } from '../modules/v1/shared/entities/User';
 dotenv.config();
 
 const isStaging = process.env.NODE_ENV === 'staging';
+const isProduction = process.env.NODE_ENV === 'production';
 
 export const AppDataSource = new DataSource({
     type: 'postgres',
@@ -16,11 +17,14 @@ export const AppDataSource = new DataSource({
     synchronize: true,
     logging: false,
     entities: [__dirname + '/../modules/v1/shared/entities/*.{ts,js}'],
-    ...(isStaging && {
-        ssl: {
-            rejectUnauthorized: false
-        }
-    })
+    ssl: (isStaging || isProduction) ? {
+        rejectUnauthorized: false
+    } : false,
+    extra: {
+        max: 1, // Limit connections for serverless
+        connectionTimeoutMillis: 10000,
+        idleTimeoutMillis: 30000
+    }
 });
 
 let isConnected = false;
@@ -34,7 +38,7 @@ export const connectDB = async () => {
         if (!AppDataSource.isInitialized) {
             await AppDataSource.initialize();
             isConnected = true;
-            console.log(`PostgreSQL Connection Successfully (${isStaging ? 'Staging' : 'Development'}).`);
+            console.log(`PostgreSQL Connection Successfully (${isStaging ? 'Staging' : isProduction ? 'Production' : 'Development'}).`);
             console.log('Database synced successfully.');
         }
     } catch (error) {
