@@ -23,13 +23,23 @@ export const AppDataSource = new DataSource({
     })
 });
 
+let isConnected = false;
+
 export const connectDB = async () => {
+    if (isConnected && AppDataSource.isInitialized) {
+        return;
+    }
+    
     try {
-        await AppDataSource.initialize();
-        console.log(`PostgreSQL Connection Successfully (${isStaging ? 'Staging' : 'Development'}).`);
-        console.log('Database synced successfully.');
+        if (!AppDataSource.isInitialized) {
+            await AppDataSource.initialize();
+            isConnected = true;
+            console.log(`PostgreSQL Connection Successfully (${isStaging ? 'Staging' : 'Development'}).`);
+            console.log('Database synced successfully.');
+        }
     } catch (error) {
         console.error('PostgreSQL connection Error: ', error);
+        isConnected = false;
         throw error;
     }
 };

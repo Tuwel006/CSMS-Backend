@@ -55,14 +55,22 @@ exports.AppDataSource = new typeorm_1.DataSource({
         }
     })
 });
+let isConnected = false;
 const connectDB = async () => {
+    if (isConnected && exports.AppDataSource.isInitialized) {
+        return;
+    }
     try {
-        await exports.AppDataSource.initialize();
-        console.log(`PostgreSQL Connection Successfully (${isStaging ? 'Staging' : 'Development'}).`);
-        console.log('Database synced successfully.');
+        if (!exports.AppDataSource.isInitialized) {
+            await exports.AppDataSource.initialize();
+            isConnected = true;
+            console.log(`PostgreSQL Connection Successfully (${isStaging ? 'Staging' : 'Development'}).`);
+            console.log('Database synced successfully.');
+        }
     }
     catch (error) {
         console.error('PostgreSQL connection Error: ', error);
+        isConnected = false;
         throw error;
     }
 };
