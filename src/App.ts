@@ -38,11 +38,20 @@ app.get('/', (_req, res) => {
     uptime: process.uptime()
   });
 });
-// Swagger Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'CSMS API Documentation'
-}));
+// Swagger Documentation (only in development)
+if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'staging') {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'CSMS API Documentation'
+  }));
+} else {
+  app.get('/api-docs', (_req, res) => {
+    res.status(200).json({
+      message: 'API Documentation is disabled in production',
+      docs: 'Please refer to the documentation repository'
+    });
+  });
+}
 
 app.use('/api', routes);
 
