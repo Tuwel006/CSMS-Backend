@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const tenants_1 = require("./tenants");
+const roles_1 = require("./roles");
+const matchs_1 = require("./matchs");
+const router = (0, express_1.Router)();
+router.use('/tenants', tenants_1.tenantRoutes);
+router.use('/roles', roles_1.roleRoutes);
+router.use('/matches', matchs_1.matchRoutes);
+exports.default = router;

@@ -1,0 +1,83 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TenantService = void 0;
+const db_1 = require("../../../../config/db");
+const Tenant_1 = require("../../shared/entities/Tenant");
+const User_1 = require("../../shared/entities/User");
+const status_codes_1 = require("../../../../constants/status-codes");
+class TenantService {
+    static async createTenant(userId, organizationName) {
+        const queryRunner = db_1.AppDataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        try {
+            const tenantRepository = queryRunner.manager.getRepository(Tenant_1.Tenant);
+            const userRepository = queryRunner.manager.getRepository(User_1.User);
+            // Check if user already has a tenant
+            const existingUser = await userRepository.findOne({ where: { id: userId } });
+            if (existingUser?.tenant_id) {
+                throw { status: status_codes_1.HTTP_STATUS.BAD_REQUEST, message: 'User already has a tenant' };
+            }
+            // Create tenant
+            const tenant = tenantRepository.create({
+                name: organizationName,
+                owner_user_id: userId
+            });
+            const savedTenant = await tenantRepository.save(tenant);
+            // Update user with tenant_id
+            await userRepository.update(userId, { tenant_id: savedTenant.id });
+            await queryRunner.commitTransaction();
+            return savedTenant;
+        }
+        catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+        }
+        finally {
+            await queryRunner.release();
+        }
+    }
+    static async getTenantDashboard(tenantId) {
+        const tenantRepository = db_1.AppDataSource.getRepository(Tenant_1.Tenant);
+        const userRepository = db_1.AppDataSource.getRepository(User_1.User);
+        const tenant = await tenantRepository.findOne({
+            where: { id: tenantId },
+            relations: ['plan']
+        });
+        if (!tenant) {
+            throw { status: status_codes_1.HTTP_STATUS.NOT_FOUND, message: 'Tenant not found' };
+        }
+        const userCount = await userRepository.count({ where: { tenant_id: tenantId } });
+        return {
+            id: tenant.id,
+            name: tenant.name,
+            planId: tenant.plan_id,
+            plan: tenant.plan ? {
+                id: tenant.plan.id,
+                name: tenant.plan.name,
+                maxMatches: tenant.plan.max_matches_per_month,
+                maxTournaments: tenant.plan.max_tournaments_per_month,
+                maxUsers: tenant.plan.max_users
+            } : null,
+            usage: {
+                currentMatches: 0, // TODO: Implement match counting
+                currentTournaments: 0, // TODO: Implement tournament counting
+                currentUsers: userCount
+            },
+            createdAt: tenant.createdAt
+        };
+    }
+    static async updateTenant(tenantId, updateData) {
+        const tenantRepository = db_1.AppDataSource.getRepository(Tenant_1.Tenant);
+        const tenant = await tenantRepository.findOne({ where: { id: tenantId } });
+        if (!tenant) {
+            throw { status: status_codes_1.HTTP_STATUS.NOT_FOUND, message: 'Tenant not found' };
+        }
+        await tenantRepository.update(tenantId, updateData);
+        return await tenantRepository.findOne({
+            where: { id: tenantId },
+            relations: ['plan', 'owner']
+        });
+    }
+}
+exports.TenantService = TenantService;
