@@ -9,12 +9,21 @@ import cookieParser from 'cookie-parser';
 
 const app = express();
 
+const allowedOrigins = [
+  'http://localhost:5000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5000'
+];
+
+if (process.env.CLIENT_URL) {
+  allowedOrigins.push(process.env.CLIENT_URL);
+}
+
 app.use(cors({
-  origin: ['http://localhost:5000','http://localhost:5173', 'http://127.0.0.1:5000', '*'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+  origin: allowedOrigins,
+  credentials: true
 }));
+
 
 app.use(morgan('dev'));
 app.use(express.json());
@@ -29,7 +38,6 @@ app.get('/', (_req, res) => {
     uptime: process.uptime()
   });
 });
-
 // Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
   customCss: '.swagger-ui .topbar { display: none }',
