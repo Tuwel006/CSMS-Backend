@@ -8,5 +8,8 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const App_1 = __importDefault(require("./App"));
 const db_1 = require("./config/db");
-(0, db_1.connectDB)(); // initialize DB ONCE
+// Initialize DB connection for serverless
+(0, db_1.connectDB)().catch(err => {
+    console.error('Database connection failed:', err);
+});
 exports.default = App_1.default;
