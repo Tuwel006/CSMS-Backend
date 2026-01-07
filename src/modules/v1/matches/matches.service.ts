@@ -436,101 +436,90 @@ export class MatchesService {
         await queryRunner.startTransaction();
 
         try {
-            const matchRepository = queryRunner.manager.getRepository(Match);
             const inningsRepository = queryRunner.manager.getRepository(MatchInnings);
             const battingRepository = queryRunner.manager.getRepository(InningsBatting);
             const bowlingRepository = queryRunner.manager.getRepository(InningsBowling);
             const ballRepository = queryRunner.manager.getRepository(BallByBall);
 
-            const { ball_type, runs = 0, batsman_id, bowler_id, is_wicket = false, wicket_type, is_boundary = false, extras_enabled = false, fielder_id } = ballData;
-
-            // Get match and current innings
-            const match = await matchRepository.findOne({ where: { id: matchId, tenant_id } });
-            if (!match) throw { status: HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
-
-            const currentInnings = await inningsRepository.findOne({
-                where: { match_id: matchId, tenant_id, is_completed: false },
-                order: { innings_number: 'DESC' }
-            });
-            if (!currentInnings) throw { status: HTTP_STATUS.NOT_FOUND, message: 'No active innings found' };
+            const { 
+                ball_type, runs = 0, batsman_id, bowler_id, is_wicket = false, 
+                wicket_type, is_boundary = false, by_runs = 0, fielder_id,
+                innings_id, batting_team_id, bowling_team_id, over_number, ball_number,
+                should_flip_striker = false, is_over_complete = false
+            } = ballData;
 
             const isLegalBall = !['WIDE', 'NO_BALL'].includes(ball_type);
-            const isBatsmanRuns = !['WIDE', 'NO_BALL', 'BYE', 'LEG_BYE'].includes(ball_type);
-            const isExtra = ['WIDE', 'NO_BALL'].includes(ball_type) && extras_enabled;
+            const isExtra = ['WIDE', 'NO_BALL'].includes(ball_type);
             const extraRuns = isExtra ? 1 : 0;
+            const runsToAdd = runs + extraRuns + by_runs;
+            const ballsToAdd = isLegalBall ? 1 : 0;
 
-            // Update innings score
-            currentInnings.runs += runs + extraRuns;
-            if (isExtra) currentInnings.extras = (currentInnings.extras || 0) + extraRuns;
-            if (is_wicket) currentInnings.wickets += 1;
-            if (isLegalBall) {
-                currentInnings.balls += 1;
-                currentInnings.overs = Math.floor(currentInnings.balls / 6) + (currentInnings.balls % 6) / 10;
-            }
-            await inningsRepository.save(currentInnings);
-
-            // Update batsman stats
-            const batsman = await battingRepository.findOne({
-                where: { innings_id: currentInnings.id, player_id: batsman_id, tenant_id }
-            });
-            if (batsman) {
-                if (isBatsmanRuns) batsman.runs += runs;
-                if (isLegalBall) batsman.balls += 1;
-                if (is_boundary && (runs === 4 || runs === 6)) {
-                    if (runs === 4) batsman.fours = (batsman.fours || 0) + 1;
-                    if (runs === 6) batsman.sixes = (batsman.sixes || 0) + 1;
+            // 1. Update innings
+            await inningsRepository.update(
+                { id: innings_id, tenant_id },
+                {
+                    runs: () => `runs + ${runsToAdd}`,
+                    wickets: () => `wickets + ${is_wicket ? 1 : 0}`,
+                    balls: () => `balls + ${ballsToAdd}`,
+                    extras: () => `extras + ${by_runs + extraRuns}`
                 }
-                batsman.strike_rate = batsman.balls > 0 ? (batsman.runs / batsman.balls) * 100 : 0;
-                if (is_wicket) {
-                    batsman.is_out = true;
-                    batsman.wicket_type = wicket_type;
-                    batsman.dismissal_over = currentInnings.overs;
-                    batsman.bowler_id = bowler_id;
-                    if (['Caught', 'Run Out', 'Stumped'].includes(wicket_type) && fielder_id) {
-                        batsman.fielder_id = fielder_id;
-                    }
+            );
+
+            // 2. Update batsman
+            await battingRepository.update(
+                { innings_id, player_id: batsman_id, tenant_id },
+                {
+                    runs: () => `runs + ${runs}`,
+                    balls: () => `balls + ${ballsToAdd}`,
+                    ...(is_boundary && runs === 4 && { fours: () => 'fours + 1' }),
+                    ...(is_boundary && runs === 6 && { sixes: () => 'sixes + 1' }),
+                    ...(is_wicket && {
+                        is_out: true,
+                        wicket_type,
+                        ...(bowler_id && { bowler_id }),
+                        ...(fielder_id && { fielder_id })
+                    })
                 }
-                await battingRepository.save(batsman);
-            }
+            );
 
-            // Update bowler stats
-            const bowler = await bowlingRepository.findOne({
-                where: { innings_id: currentInnings.id, player_id: bowler_id, tenant_id }
-            });
-            if (bowler) {
-                bowler.runs += runs + extraRuns;
-                if (is_wicket) bowler.wickets += 1;
-                if (isLegalBall) {
-                    const ballsBowled = Math.floor(bowler.overs) * 6 + ((bowler.overs % 1) * 10) + 1;
-                    bowler.overs = Math.floor(ballsBowled / 6) + (ballsBowled % 6) / 10;
+            // 3. Update bowler
+            await bowlingRepository.update(
+                { innings_id, player_id: bowler_id, tenant_id },
+                {
+                    runs: () => `runs + ${runsToAdd}`,
+                    ...(is_wicket && { wickets: () => 'wickets + 1' }),
+                    ...(isLegalBall && {
+                        overs: () => `FLOOR((FLOOR(overs) * 6 + (overs % 1) * 10 + 1) / 6) + ((FLOOR(overs) * 6 + (overs % 1) * 10 + 1) % 6) / 10.0`,
+                        economy: () => 'CASE WHEN overs > 0 THEN runs / overs ELSE 0 END'
+                    })
                 }
-                bowler.economy = bowler.overs > 0 ? bowler.runs / bowler.overs : 0;
-                await bowlingRepository.save(bowler);
+            );
+
+            // 4. Handle striker rotation
+            if (should_flip_striker) {
+                await battingRepository
+                    .createQueryBuilder()
+                    .update(InningsBatting)
+                    .set({ is_striker: () => 'NOT is_striker' })
+                    .where('innings_id = :innings_id AND tenant_id = :tenant_id AND is_out = false', 
+                        { innings_id, tenant_id })
+                    .execute();
             }
 
-            // Handle striker rotation for odd runs (but not on over completion)
-            if ((runs % 2 === 1) && !(isLegalBall && currentInnings.balls % 6 === 0)) {
-                await this.flipStriker(currentInnings.id, tenant_id, queryRunner);
-            }
-
-            // Handle over completion: flip striker and reset current bowler
-            if (isLegalBall && currentInnings.balls % 6 === 0) {
-                await this.flipStriker(currentInnings.id, tenant_id, queryRunner);
+            // 5. Handle over completion
+            if (is_over_complete) {
                 await bowlingRepository.update(
-                    { innings_id: currentInnings.id, tenant_id },
+                    { innings_id, tenant_id },
                     { is_current_bowler: false }
                 );
             }
 
-            // Create ball record
-            const over_number = Math.floor((currentInnings.balls - 1) / 6) + 1;
-            const ball_number = ((currentInnings.balls - 1) % 6) + 1;
-            
-            const ball = ballRepository.create({
+            // 6. Create ball record
+            await ballRepository.insert({
                 match_id: matchId,
-                innings_id: currentInnings.id,
-                batting_team_id: currentInnings.batting_team_id,
-                bowling_team_id: currentInnings.bowling_team_id,
+                innings_id,
+                batting_team_id,
+                bowling_team_id,
                 over_number,
                 ball_number,
                 ball_type,
@@ -542,7 +531,6 @@ export class MatchesService {
                 wicket_type,
                 tenant_id
             });
-            await ballRepository.save(ball);
 
             await queryRunner.commitTransaction();
             return { success: true, message: 'Ball recorded successfully' };
@@ -552,20 +540,6 @@ export class MatchesService {
         } finally {
             await queryRunner.release();
         }
-    }
-
-    private static async flipStriker(innings_id: number, tenant_id: number, queryRunner: any) {
-        const battingRepository = queryRunner.manager.getRepository(InningsBatting);
-        
-        const batsmen = await battingRepository.find({
-            where: { innings_id, tenant_id, is_out: false }
-        });
-        
-        batsmen.forEach((batsman: any) => {
-            batsman.is_striker = !batsman.is_striker;
-        });
-        
-        await battingRepository.save(batsmen);
     }
 
     static async getAvailableBatsmen(matchId: string, inningsNumber: number, tenant_id: number) {
