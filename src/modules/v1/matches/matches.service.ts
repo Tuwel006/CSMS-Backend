@@ -7,7 +7,7 @@ import { InningsBatting } from '../shared/entities/InningsBatting';
 import { InningsBowling } from '../shared/entities/InningsBowling';
 import { BallByBall } from '../shared/entities/BallByBall';
 import { TeamService } from '../teams/team.service';
-import { CreateMatchDto, MatchStartDto, UpdateMatchDto } from './matches.dto';
+import { CreateMatchDto, MatchStartDto, RecordBallDto, UpdateMatchDto } from './matches.dto';
 import { HTTP_STATUS } from '../../../constants/status-codes';
 
 export class MatchesService {
@@ -298,7 +298,7 @@ export class MatchesService {
                 ballRepository.find({
                     where: { 
                         innings_id: inning.id, 
-                        over_number: Math.floor(Number(inning.overs)) + 1,
+                        over_number: inning.current_over,
                         tenant_id 
                     },
                     order: { ball_number: 'ASC' }
@@ -316,7 +316,7 @@ export class MatchesService {
                 score: {
                     r: inning.runs,
                     w: inning.wickets,
-                    o: inning.overs.toString()
+                    b: inning.balls
                 },
                 batting: batting.filter((b: InningsBatting) => !b.is_out).reduce((acc: any, b: InningsBatting) => {
                     const battingOrder = batting.findIndex((bat: InningsBatting) => bat.id === b.id) + 1;
@@ -350,15 +350,12 @@ export class MatchesService {
                 bowling: bowling.map((b: InningsBowling) => ({
                     id: b.player.id,
                     n: b.player.full_name,
-                    o: b.overs.toString(),
+                    b: b.balls,
                     r: b.runs,
-                    w: b.wickets,
-                    eco: b.economy,
-                    extras: currentBowler?.player.id === b.player.id ? 
-                        currentOverBalls.filter((ball: BallByBall) => ['WIDE', 'NO_BALL'].includes(ball.ball_type)).length : 0
+                    w: b.wickets
                 })),
                 currentOver: {
-                    o: Math.floor(Number(inning.overs)) + 1,
+                    o: inning.current_over,
                     bowlerId: currentBowler?.player.id || null,
                     balls: currentOverBalls.map((ball: BallByBall) => ({
                         b: ball.ball_number,
@@ -430,7 +427,7 @@ export class MatchesService {
         return await inningsRepository.save(innings);
     }
 
-    static async recordBall(matchId: string, ballData: any, tenant_id: number) {
+    static async recordBall(matchId: string, ballData: RecordBallDto, tenant_id: number) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -442,10 +439,9 @@ export class MatchesService {
             const ballRepository = queryRunner.manager.getRepository(BallByBall);
 
             const { 
-                ball_type, runs = 0, batsman_id, bowler_id, is_wicket = false, 
-                wicket_type, is_boundary = false, by_runs = 0, fielder_id,
-                innings_id, batting_team_id, bowling_team_id, over_number, ball_number,
-                should_flip_striker = false, is_over_complete = false
+                innings_id, ball_type, runs = 0, batsman_id, bowler_id, is_wicket = false, 
+                is_boundary = false, by_runs = 0, wicket, is_over_complete = false,
+                batting_team_id, bowling_team_id, over_number, ball_number, should_flip_striker = false
             } = ballData;
 
             const isLegalBall = !['WIDE', 'NO_BALL'].includes(ball_type);
@@ -461,7 +457,8 @@ export class MatchesService {
                     runs: () => `runs + ${runsToAdd}`,
                     wickets: () => `wickets + ${is_wicket ? 1 : 0}`,
                     balls: () => `balls + ${ballsToAdd}`,
-                    extras: () => `extras + ${by_runs + extraRuns}`
+                    extras: () => `extras + ${by_runs + extraRuns}`,
+                    ...(is_over_complete && { current_over: () => 'current_over + 1' })
                 }
             );
 
@@ -475,9 +472,9 @@ export class MatchesService {
                     ...(is_boundary && runs === 6 && { sixes: () => 'sixes + 1' }),
                     ...(is_wicket && {
                         is_out: true,
-                        wicket_type,
-                        ...(bowler_id && { bowler_id }),
-                        ...(fielder_id && { fielder_id })
+                        wicket_type: wicket?.wicket_type,
+                        ...(wicket?.bowler_id && { bowler_id: wicket.bowler_id }),
+                        ...(wicket?.fielder_id && { fielder_id: wicket.fielder_id })
                     })
                 }
             );
@@ -488,10 +485,7 @@ export class MatchesService {
                 {
                     runs: () => `runs + ${runsToAdd}`,
                     ...(is_wicket && { wickets: () => 'wickets + 1' }),
-                    ...(isLegalBall && {
-                        overs: () => `FLOOR((FLOOR(overs) * 6 + (overs % 1) * 10 + 1) / 6) + ((FLOOR(overs) * 6 + (overs % 1) * 10 + 1) % 6) / 10.0`,
-                        economy: () => 'CASE WHEN overs > 0 THEN runs / overs ELSE 0 END'
-                    })
+                    ...(isLegalBall && { balls: () => 'balls + 1' })
                 }
             );
 
@@ -518,8 +512,6 @@ export class MatchesService {
             await ballRepository.insert({
                 match_id: matchId,
                 innings_id,
-                batting_team_id,
-                bowling_team_id,
                 over_number,
                 ball_number,
                 ball_type,
@@ -528,7 +520,7 @@ export class MatchesService {
                 bowler_id,
                 is_boundary,
                 is_wicket,
-                wicket_type,
+                wicket_type: wicket?.wicket_type,
                 tenant_id
             });
 

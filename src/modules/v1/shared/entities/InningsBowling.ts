@@ -21,11 +21,14 @@ export class InningsBowling {
   @Column()
   player_id: number;
 
-  @Column({ type: 'decimal', precision: 4, scale: 1, default: 0.0 })
-  overs: number;
+  @Column({ default: 0 })
+  over: number;
 
   @Column({ default: 0 })
   runs: number;
+
+  @Column({ default: 0 })
+  balls: number;
 
   @Column({ default: 0 })
   wickets: number;

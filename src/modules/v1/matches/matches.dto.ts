@@ -57,11 +57,23 @@ export interface MatchStartDto {
 }
 
 export interface RecordBallDto {
-    ball_type: string; // 'NORMAL', 'WIDE', 'NO_BALL', 'BYE', 'LEG_BYE', 'DOT'
-    runs: number;
+    ball_type: string;
+    runs?: number;
     batsman_id: number;
     bowler_id: number;
     is_wicket?: boolean;
-    wicket_type?: string; // 'BOWLED', 'CAUGHT', 'LBW', 'RUN_OUT', 'STUMPED'
     is_boundary?: boolean;
+    by_runs?: number;
+    wicket?: {
+        wicket_type?: string;
+        bowler_id?: number;
+        fielder_id?: number;
+    };
+    innings_id: number;
+    batting_team_id: number;
+    bowling_team_id: number;
+    over_number: number;
+    ball_number: number;
+    should_flip_striker?: boolean;
+    is_over_complete?: boolean;
 }

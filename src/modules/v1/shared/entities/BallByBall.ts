@@ -22,16 +22,16 @@ export class BallByBall {
   @Column()
   innings_id: number;
 
-  @Column()
-  batting_team_id: number;
+  // @Column()
+  // batting_team_id: number;
 
-  @Column()
-  bowling_team_id: number;
+  // @Column()
+  // bowling_team_id: number;
 
-  @Column()
+  @Column({nullable: true})
   over_number: number;
 
-  @Column()
+  @Column({nullable: true})
   ball_number: number;
 
   @Column()
@@ -66,13 +66,13 @@ export class BallByBall {
   @JoinColumn({ name: 'innings_id' })
   innings: MatchInnings;
 
-  @ManyToOne(() => Team)
-  @JoinColumn({ name: 'batting_team_id' })
-  battingTeam: Team;
+  // @ManyToOne(() => Team)
+  // @JoinColumn({ name: 'batting_team_id' })
+  // battingTeam: Team;
 
-  @ManyToOne(() => Team)
-  @JoinColumn({ name: 'bowling_team_id' })
-  bowlingTeam: Team;
+  // @ManyToOne(() => Team)
+  // @JoinColumn({ name: 'bowling_team_id' })
+  // bowlingTeam: Team;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -39,6 +39,9 @@ export class MatchInnings {
   @Column({ default: 0 })
   balls: number;
 
+  @Column({ default: 1 })
+  current_over: number;
+
   @Column({ default: 0 })
   extras: number;
 

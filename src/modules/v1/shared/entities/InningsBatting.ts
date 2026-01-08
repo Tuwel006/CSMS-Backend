@@ -68,11 +68,11 @@ export class InningsBatting {
   @JoinColumn({ name: 'player_id' })
   player: Player;
 
-  @ManyToOne(() => Player)
+  @ManyToOne(() => Player, { nullable: true })
   @JoinColumn({ name: 'bowler_id' })
   bowler: Player;
 
-  @ManyToOne(() => Player)
+  @ManyToOne(() => Player, { nullable: true })
   @JoinColumn({ name: 'fielder_id' })
   fielder: Player;
 
