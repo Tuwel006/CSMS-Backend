@@ -16,7 +16,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 export const AppDataSource = new DataSource({
     type: 'postgres',
     host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT),
+    port: Number(process.env.DB_PORT || 5432),
     username: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
@@ -26,12 +26,11 @@ export const AppDataSource = new DataSource({
     ssl: (isStaging || isProduction || isDevelopment) ? {
         rejectUnauthorized: false
     } : false,
+    connectTimeoutMS: 10000,
     extra: {
-        max: 10,
-        connectionTimeoutMillis: 30000,
+        max: 5,
+        connectionTimeoutMillis: 10000,
         idleTimeoutMillis: 30000,
-        query_timeout: 30000,
-        statement_timeout: 30000,
         keepAlive: true,
         keepAliveInitialDelayMillis: 10000
     }

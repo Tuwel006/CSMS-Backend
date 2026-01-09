@@ -261,140 +261,174 @@ export class MatchesService {
         }
     }
 
-    static async getMatchScore(id: string, tenant_id: number) {
-        const matchRepository = AppDataSource.getRepository(Match);
-        const inningsRepository = AppDataSource.getRepository(MatchInnings);
-        const battingRepository = AppDataSource.getRepository(InningsBatting);
-        const bowlingRepository = AppDataSource.getRepository(InningsBowling);
-        const ballRepository = AppDataSource.getRepository(BallByBall);
-        
-        const [match, innings] = await Promise.all([
-            matchRepository.findOne({
-                where: { id, tenant_id },
-                relations: ['teamA', 'teamB']
-            }),
-            inningsRepository.find({
-                where: { match_id: id, tenant_id },
-                relations: ['battingTeam', 'bowlingTeam'],
-                order: { innings_number: 'ASC' }
-            })
-        ]);
+    static async getMatchScore(matchId: string, tenant_id: number) {
+  const matchRepo = AppDataSource.getRepository(Match);
+  const inningsRepo = AppDataSource.getRepository(MatchInnings);
+  const battingRepo = AppDataSource.getRepository(InningsBatting);
+  const bowlingRepo = AppDataSource.getRepository(InningsBowling);
+  const ballRepo = AppDataSource.getRepository(BallByBall);
 
-        if (!match) {
-            throw { status: HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
-        }
+  /* 1️⃣ Get match + innings (PARALLEL) */
+  const [match, inningsList] = await Promise.all([
+    matchRepo.findOne({
+      where: { id: matchId, tenant_id },
+      relations: ['teamA', 'teamB']
+    }),
+    inningsRepo.find({
+      where: { match_id: matchId, tenant_id },
+      relations: ['battingTeam', 'bowlingTeam'],
+      order: { innings_number: 'ASC' }
+    })
+  ]);
 
-        const inningsWithDetails = await Promise.all(innings.map(async (inning: MatchInnings) => {
-            const [batting, bowling, currentOverBalls, currentBowler] = await Promise.all([
-                battingRepository.find({
-                    where: { innings_id: inning.id, tenant_id },
-                    relations: ['player', 'bowler', 'fielder'],
-                    order: { createdAt: 'ASC' }
-                }),
-                bowlingRepository.find({
-                    where: { innings_id: inning.id, tenant_id },
-                    relations: ['player']
-                }),
-                ballRepository.find({
-                    where: { 
-                        innings_id: inning.id, 
-                        over_number: inning.current_over,
-                        tenant_id 
-                    },
-                    order: { ball_number: 'ASC' }
-                }),
-                bowlingRepository.findOne({
-                    where: { innings_id: inning.id, tenant_id, is_current_bowler: true },
-                    relations: ['player']
-                })
-            ]);
+  if (!match) {
+    throw { status: 404, message: 'Match not found' };
+  }
 
-            return {
-                i: inning.innings_number,
-                battingTeam: inning.battingTeam?.short_name,
-                bowlingTeam: inning.bowlingTeam?.short_name,
-                score: {
-                    r: inning.runs,
-                    w: inning.wickets,
-                    b: inning.balls
-                },
-                batting: batting.filter((b: InningsBatting) => !b.is_out).reduce((acc: any, b: InningsBatting) => {
-                    const battingOrder = batting.findIndex((bat: InningsBatting) => bat.id === b.id) + 1;
-                    const player = {
-                        id: b.player.id,
-                        n: b.player.full_name,
-                        r: b.runs,
-                        b: b.balls,
-                        '4s': b.fours || 0,
-                        '6s': b.sixes || 0,
-                        sr: b.strike_rate,
-                        order: battingOrder
-                    };
-                    if (b.is_striker) acc.striker = player;
-                    else acc.nonStriker = player;
-                    return acc;
-                }, { striker: null, nonStriker: null }),
-                dismissed: batting.filter((b: InningsBatting) => b.is_out).map((b: InningsBatting, index: number) => ({
-                    id: b.player.id,
-                    n: b.player.full_name,
-                    r: b.runs,
-                    b: b.balls,
-                    w: {
-                        wicket_type: b.wicket_type,
-                        by: b.fielder?.full_name,
-                        bowler: b.bowler?.full_name
-                    },
-                    o: b.dismissal_over?.toString(),
-                    order: batting.findIndex((bat: InningsBatting) => bat.id === b.id) + 1
-                })),
-                bowling: bowling.map((b: InningsBowling) => ({
-                    id: b.player.id,
-                    n: b.player.full_name,
-                    b: b.balls,
-                    r: b.runs,
-                    w: b.wickets
-                })),
-                currentOver: {
-                    o: inning.current_over,
-                    bowlerId: currentBowler?.player.id || null,
-                    balls: currentOverBalls.map((ball: BallByBall) => ({
-                        b: ball.ball_number,
-                        t: ball.ball_type,
-                        r: ball.is_wicket ? 'W' : ball.runs
-                    }))
-                }
-            };
+  /* 2️⃣ Build innings response */
+  const inningsData = await Promise.all(
+    inningsList.map(async (inning) => {
+
+      /* 🔹 Fetch only what is needed */
+      const [
+        batsmen,
+        bowlers,
+        currentBowler,
+        currentOverBalls
+      ] = await Promise.all([
+        battingRepo.find({
+          where: { innings_id: inning.id, tenant_id },
+          relations: ['player', 'bowler', 'fielder']
+        }),
+        bowlingRepo.find({
+          where: { innings_id: inning.id, tenant_id },
+          relations: ['player']
+        }),
+        bowlingRepo.findOne({
+          where: {
+            innings_id: inning.id,
+            tenant_id,
+            is_current_bowler: true
+          },
+          relations: ['player']
+        }),
+        ballRepo.find({
+          where: {
+            innings_id: inning.id,
+            over_number: inning.current_over,
+            tenant_id
+          },
+          order: { ball_number: 'ASC' }
+        })
+      ]);
+
+      /* 3️⃣ Striker & non-striker */
+      const striker = batsmen.find(b => b.is_striker && !b.is_out);
+      const nonStriker = batsmen.find(b => !b.is_striker && !b.is_out);
+
+      /* 4️⃣ Dismissed batsmen */
+      const dismissed = batsmen
+        .filter(b => b.is_out)
+        .map((b) => ({
+          id: b.player.id,
+          n: b.player.full_name,
+          r: b.runs,
+          b: b.balls,
+          w: {
+            type: b.wicket_type,
+            bowler: b.bowler?.full_name || null,
+            fielder: b.fielder?.full_name || null
+          },
+          o: b.dismissal_over
         }));
 
-        return {
-            success: true,
-            data: {
-                    meta: {
-                    matchId: match.id,
-                    format: match.format,
-                    status: match.status,
-                    lastUpdated: match.updatedAt
-                },
-                commentary: {
-                    initial: "Match will start soon. Players are warming up.",
-                    latest: "Live commentary will appear here."
-                },
-                teams: {
-                    A: {
-                        id: match.teamA?.id,
-                        name: match.teamA?.name,
-                        short: match.teamA?.short_name
-                    },
-                    B: {
-                        id: match.teamB?.id,
-                        name: match.teamB?.name,
-                        short: match.teamB?.short_name
-                    }
-                },
-                innings: inningsWithDetails
-            }
-        };
+      /* 5️⃣ isOverComplete (NO DB QUERY) */
+      const isOverComplete = inning.balls % 6 === 0 && inning.balls > 0;
+
+      return {
+        i: inning.innings_number,
+        battingTeam: inning.battingTeam.short_name,
+        bowlingTeam: inning.bowlingTeam.short_name,
+
+        score: {
+          r: inning.runs,
+          w: inning.wickets,
+          b: inning.balls
+        },
+
+        batting: {
+          striker: striker && {
+            id: striker.player.id,
+            n: striker.player.full_name,
+            r: striker.runs,
+            b: striker.balls,
+            '4s': striker.fours,
+            '6s': striker.sixes,
+            sr: striker.strike_rate
+          },
+          nonStriker: nonStriker && {
+            id: nonStriker.player.id,
+            n: nonStriker.player.full_name,
+            r: nonStriker.runs,
+            b: nonStriker.balls,
+            '4s': nonStriker.fours,
+            '6s': nonStriker.sixes,
+            sr: nonStriker.strike_rate
+          }
+        },
+
+        dismissed,
+
+        bowling: bowlers.map(b => ({
+          id: b.player.id,
+          n: b.player.full_name,
+          b: b.balls,
+          r: b.runs,
+          w: b.wickets,
+          e: b.economy
+        })),
+
+        currentOver: {
+          o: inning.current_over,
+          isOverComplete,
+          bowlerId: currentBowler?.player.id || null,
+          balls: currentOverBalls.map(ball => ({
+            b: ball.ball_number,
+            t: ball.ball_type,
+            r: ball.is_wicket ? 'W' : ball.runs
+          }))
+        }
+      };
+    })
+  );
+
+  /* 6️⃣ Final response */
+  return {
+    success: true,
+    data: {
+      meta: {
+        matchId: match.id,
+        format: match.format,
+        status: match.status,
+        lastUpdated: match.updatedAt
+      },
+      teams: {
+        A: {
+          id: match.teamA.id,
+          name: match.teamA.name,
+          short: match.teamA.short_name
+        },
+        B: {
+          id: match.teamB.id,
+          name: match.teamB.name,
+          short: match.teamB.short_name
+        }
+      },
+      innings: inningsData
     }
+  };
+}
+
 
     static async updateInningsScore(matchId: string, inningsData: any, tenant_id: number) {
         const inningsRepository = AppDataSource.getRepository(MatchInnings);
@@ -440,16 +474,28 @@ export class MatchesService {
 
             const { 
                 innings_id, ball_type, runs = 0, batsman_id, bowler_id, is_wicket = false, 
-                is_boundary = false, by_runs = 0, wicket, is_over_complete = false,
-                batting_team_id, bowling_team_id, over_number, ball_number, should_flip_striker = false
+                is_boundary = false, by_runs = 0, wicket,
+                batting_team_id, bowling_team_id, ball_number, should_flip_striker = false
             } = ballData;
 
             const isLegalBall = !['WIDE', 'NO_BALL'].includes(ball_type);
             const isExtra = ['WIDE', 'NO_BALL'].includes(ball_type);
             const extraRuns = isExtra ? 1 : 0;
-            const runsToAdd = runs + extraRuns + by_runs;
+            const runsBetweenWickets = runs > 0 ? runs : by_runs;
+            const runsToAdd = runsBetweenWickets + extraRuns;
             const ballsToAdd = isLegalBall ? 1 : 0;
 
+            const innings = await inningsRepository.findOne({
+            where: { id: innings_id, tenant_id },
+            lock: { mode: 'pessimistic_write' }
+            });
+
+            if (!innings) throw new Error('Innings not found');
+
+            const nextBallCount = innings.balls + ballsToAdd;
+            const isOverComplete = nextBallCount % 6 === 0 && isLegalBall;
+
+            const shouldFlipStricker = isOverComplete || runsBetweenWickets % 2 === 1;
             // 1. Update innings
             await inningsRepository.update(
                 { id: innings_id, tenant_id },
@@ -458,7 +504,7 @@ export class MatchesService {
                     wickets: () => `wickets + ${is_wicket ? 1 : 0}`,
                     balls: () => `balls + ${ballsToAdd}`,
                     extras: () => `extras + ${by_runs + extraRuns}`,
-                    ...(is_over_complete && { current_over: () => 'current_over + 1' })
+                    ...(isOverComplete && { current_over: () => 'current_over + 1' })
                 }
             );
 
@@ -490,7 +536,7 @@ export class MatchesService {
             );
 
             // 4. Handle striker rotation
-            if (should_flip_striker) {
+            if (shouldFlipStricker) {
                 await battingRepository
                     .createQueryBuilder()
                     .update(InningsBatting)
@@ -501,7 +547,7 @@ export class MatchesService {
             }
 
             // 5. Handle over completion
-            if (is_over_complete) {
+            if (isOverComplete) {
                 await bowlingRepository.update(
                     { innings_id, tenant_id },
                     { is_current_bowler: false }
@@ -512,8 +558,8 @@ export class MatchesService {
             await ballRepository.insert({
                 match_id: matchId,
                 innings_id,
-                over_number,
-                ball_number,
+                over_number: innings.current_over,
+                ball_number: innings.balls % 6 + 1,
                 ball_type,
                 runs,
                 batsman_id,
