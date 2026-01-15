@@ -392,6 +392,10 @@ export class MatchesService {
           o: inning.current_over,
           isOverComplete,
           bowlerId: currentBowler?.player.id || null,
+          ballsCount: currentOverBalls.length,
+          illegalBallsCount: currentOverBalls.filter(ball => 
+            ['WIDE', 'NO_BALL'].includes(ball.ball_type)
+          ).length,
           balls: currentOverBalls.map(ball => ({
             b: ball.ball_number,
             t: ball.ball_type,
@@ -474,10 +478,10 @@ export class MatchesService {
 
             const { 
                 innings_id, ball_type, runs = 0, batsman_id, bowler_id, is_wicket = false, 
-                is_boundary = false, by_runs = 0, wicket,
-                batting_team_id, bowling_team_id, ball_number, should_flip_striker = false
+                is_boundary = false, by_runs = 0, wicket
             } = ballData;
 
+            // Cricket logic calculations
             const isLegalBall = !['WIDE', 'NO_BALL'].includes(ball_type);
             const isExtra = ['WIDE', 'NO_BALL'].includes(ball_type);
             const extraRuns = isExtra ? 1 : 0;
@@ -485,18 +489,32 @@ export class MatchesService {
             const runsToAdd = runsBetweenWickets + extraRuns;
             const ballsToAdd = isLegalBall ? 1 : 0;
 
+            // Fetch innings with pessimistic lock
             const innings = await inningsRepository.findOne({
-            where: { id: innings_id, tenant_id },
-            lock: { mode: 'pessimistic_write' }
+                where: { id: innings_id, tenant_id },
+                lock: { mode: 'pessimistic_write' }
             });
 
             if (!innings) throw new Error('Innings not found');
 
+            // Calculate final values (innings becomes stale after updates)
+            const totalRuns = innings.runs + runsToAdd;
+            const totalWickets = innings.wickets + (is_wicket ? 1 : 0);
+            const totalBalls = innings.balls + ballsToAdd;
+            const totalExtras = innings.extras + by_runs + extraRuns;
             const nextBallCount = innings.balls + ballsToAdd;
             const isOverComplete = nextBallCount % 6 === 0 && isLegalBall;
+            const overNumber = innings.current_over + (isOverComplete ? 1 : 0);
+            
+            // Ball number logic: legal balls increment, extras don't
+            const ballNumber = isLegalBall
+                ? (innings.balls % 6) + 1
+                : (innings.balls % 6) || 6;
 
-            const shouldFlipStricker = isOverComplete || runsBetweenWickets % 2 === 1;
-            // 1. Update innings
+            // Strike rotation: odd runs OR end of over (legal ball only)
+            const shouldFlipStrike = runsBetweenWickets % 2 === 1 || (isOverComplete && isLegalBall);
+
+            // 1. Update innings (atomic SQL)
             await inningsRepository.update(
                 { id: innings_id, tenant_id },
                 {
@@ -508,7 +526,7 @@ export class MatchesService {
                 }
             );
 
-            // 2. Update batsman
+            // 2. Update batsman (atomic SQL)
             await battingRepository.update(
                 { innings_id, player_id: batsman_id, tenant_id },
                 {
@@ -518,14 +536,14 @@ export class MatchesService {
                     ...(is_boundary && runs === 6 && { sixes: () => 'sixes + 1' }),
                     ...(is_wicket && {
                         is_out: true,
-                        wicket_type: wicket?.wicket_type,
+                        ...(wicket?.wicket_type && { wicket_type: wicket.wicket_type }),
                         ...(wicket?.bowler_id && { bowler_id: wicket.bowler_id }),
                         ...(wicket?.fielder_id && { fielder_id: wicket.fielder_id })
                     })
                 }
             );
 
-            // 3. Update bowler
+            // 3. Update bowler (atomic SQL)
             await bowlingRepository.update(
                 { innings_id, player_id: bowler_id, tenant_id },
                 {
@@ -535,8 +553,8 @@ export class MatchesService {
                 }
             );
 
-            // 4. Handle striker rotation
-            if (shouldFlipStricker) {
+            // 4. Handle strike rotation
+            if (shouldFlipStrike) {
                 await battingRepository
                     .createQueryBuilder()
                     .update(InningsBatting)
@@ -557,9 +575,9 @@ export class MatchesService {
             // 6. Create ball record
             await ballRepository.insert({
                 match_id: matchId,
-                innings_id,
+                innings_id: innings.id,
                 over_number: innings.current_over,
-                ball_number: innings.balls % 6 + 1,
+                ball_number: ballNumber,
                 ball_type,
                 runs,
                 batsman_id,
@@ -570,8 +588,54 @@ export class MatchesService {
                 tenant_id
             });
 
+            // Fetch current over balls for response
+            const currentOverBalls = await ballRepository.find({
+                where: {
+                    innings_id: innings.id,
+                    over_number: isOverComplete ? innings.current_over + 1 : innings.current_over,
+                    tenant_id
+                },
+                order: { ball_number: 'ASC' }
+            });
+
+            const illegalBallsCount = currentOverBalls.filter(ball => 
+                ['WIDE', 'NO_BALL'].includes(ball.ball_type)
+            ).length;
+
             await queryRunner.commitTransaction();
-            return { success: true, message: 'Ball recorded successfully' };
+            
+            // Return UI-friendly response with computed final values
+            return {
+                innings: innings_id,
+                totalRuns,
+                totalWickets,
+                totalBalls,
+                totalExtras,
+                runsAdded: runsToAdd,
+                batsmanRuns: runs,
+                bowlerRuns: runsToAdd,
+                byRuns: by_runs,
+                extraRuns: extraRuns,
+                isLegalBall,
+                isWicket: is_wicket,
+                isOverComplete,
+                shouldFlipStrike,
+                overNumber,
+                ballNumber,
+                currentOver: {
+                    o: isOverComplete ? innings.current_over + 1 : innings.current_over,
+                    isOverComplete,
+                    bowlerId: bowler_id,
+                    ballsCount: currentOverBalls.length,
+                    illegalBallsCount,
+                    balls: currentOverBalls.map(ball => ({
+                        b: ball.ball_number,
+                        t: ball.ball_type,
+                        r: ball.is_wicket ? 'W' : ball.runs
+                    }))
+                },
+                timestamp: new Date().toISOString()
+            };
         } catch (error) {
             await queryRunner.rollbackTransaction();
             throw error;
