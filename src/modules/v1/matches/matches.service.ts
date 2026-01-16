@@ -9,6 +9,7 @@ import { BallByBall } from '../shared/entities/BallByBall';
 import { TeamService } from '../teams/team.service';
 import { CreateMatchDto, MatchStartDto, RecordBallDto, UpdateMatchDto } from './matches.dto';
 import { HTTP_STATUS } from '../../../constants/status-codes';
+import { Not, IsNull } from 'typeorm';
 
 export class MatchesService {
     private static async resolveTeam(teamData: any, tenant_id: number): Promise<number> {
@@ -74,6 +75,150 @@ export class MatchesService {
             where: { tenant_id },
             relations: ['teamA', 'teamB']
         });
+    }
+
+    static async getTenantMatches(tenant_id: number, page: number = 1, limit: number = 10, status?: string) {
+        const matchRepository = AppDataSource.getRepository(Match);
+        const inningsRepository = AppDataSource.getRepository(MatchInnings);
+
+        const skip = (page - 1) * limit;
+        const where: any = { tenant_id, team_a_id: Not(IsNull()), team_b_id: Not(IsNull()) };
+        if (status) where.status = status;
+
+        const [matches, total] = await matchRepository.findAndCount({
+            where,
+            relations: ['teamA', 'teamB'],
+            order: { match_date: 'DESC', createdAt: 'DESC' },
+            skip,
+            take: limit
+        });
+
+        const matchesWithInnings = await Promise.all(
+            matches.map(async (match) => {
+                const innings = await inningsRepository.find({
+                    where: { match_id: match.id, tenant_id },
+                    relations: ['battingTeam', 'bowlingTeam'],
+                    order: { innings_number: 'ASC' }
+                });
+
+                return {
+                    meta: {
+                        matchId: match.id,
+                        format: match.format,
+                        status: match.status,
+                        lastUpdated: match.updatedAt
+                    },
+                    teams: {
+                        A: {
+                            id: match.teamA.id,
+                            name: match.teamA.name,
+                            short: match.teamA.short_name
+                        },
+                        B: {
+                            id: match.teamB.id,
+                            name: match.teamB.name,
+                            short: match.teamB.short_name
+                        }
+                    },
+                    innings: innings.map(inning => ({
+                        i: inning.innings_number,
+                        battingTeam: inning.battingTeam.short_name,
+                        bowlingTeam: inning.bowlingTeam.short_name,
+                        score: {
+                            r: inning.runs,
+                            w: inning.wickets,
+                            b: inning.balls
+                        }
+                    }))
+                };
+            })
+        );
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            data: matchesWithInnings,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPreviousPage: page > 1
+            }
+        };
+    }
+
+    static async getAllMatches(page: number = 1, limit: number = 10, sortBy: string = 'createdAt') {
+        const matchRepository = AppDataSource.getRepository(Match);
+        const inningsRepository = AppDataSource.getRepository(MatchInnings);
+
+        const skip = (page - 1) * limit;
+        const orderField = sortBy === 'match_date' ? 'match_date' : 'createdAt';
+
+        const [matches, total] = await matchRepository.findAndCount({
+            where: { team_a_id: Not(IsNull()), team_b_id: Not(IsNull()) },
+            relations: ['teamA', 'teamB'],
+            order: { [orderField]: 'DESC' },
+            skip,
+            take: limit
+        });
+
+        const matchesWithInnings = await Promise.all(
+            matches.map(async (match) => {
+                const innings = await inningsRepository.find({
+                    where: { match_id: match.id, tenant_id: match.tenant_id },
+                    relations: ['battingTeam', 'bowlingTeam'],
+                    order: { innings_number: 'ASC' }
+                });
+
+                return {
+                    meta: {
+                        matchId: match.id,
+                        format: match.format,
+                        status: match.status,
+                        lastUpdated: match.updatedAt,
+                        tenantId: match.tenant_id
+                    },
+                    teams: {
+                        A: {
+                            id: match.teamA.id,
+                            name: match.teamA.name,
+                            short: match.teamA.short_name
+                        },
+                        B: {
+                            id: match.teamB.id,
+                            name: match.teamB.name,
+                            short: match.teamB.short_name
+                        }
+                    },
+                    innings: innings.map(inning => ({
+                        i: inning.innings_number,
+                        battingTeam: inning.battingTeam.short_name,
+                        bowlingTeam: inning.bowlingTeam.short_name,
+                        score: {
+                            r: inning.runs,
+                            w: inning.wickets,
+                            b: inning.balls
+                        }
+                    }))
+                };
+            })
+        );
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            data: matchesWithInnings,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPreviousPage: page > 1
+            }
+        };
     }
 
     static async getMatchById(id: string, tenant_id: number) {

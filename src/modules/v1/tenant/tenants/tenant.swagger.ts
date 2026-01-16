@@ -5,27 +5,37 @@ export const tenantPaths = {
       description: 'Creates a new tenant organization for the authenticated user',
       tags: ['Tenant Management'],
       security: [{ bearerAuth: [] }],
-      parameters: [
-        {
-          name: 'organizationName',
-          in: 'query',
-          required: true,
-          schema: {
-            type: 'string',
-            minLength: 2,
-            maxLength: 100
-          },
-          description: 'Organization name (2-100 characters)',
-          example: 'My Cricket Club'
-        }
-      ],
+      // parameters: [
+      //   {
+      //     name: 'organizationName',
+      //     in: 'query',
+      //     required: true,
+      //     schema: {
+      //       type: 'string',
+      //       minLength: 2,
+      //       maxLength: 100
+      //     },
+      //     description: 'Organization name (2-100 characters)',
+      //     example: 'My Cricket Club'
+      //   },
+      //   {
+      //     name: 'planId',
+      //     required: true,
+      //     in: 'query',
+      //     schema: {
+      //       type: 'integer',
+      //     },
+      //     description: 'Select subscription plan for tenant',
+      //     example: 1
+      //   }
+      // ],
       requestBody: {
         required: true,
         content: {
           'application/json': {
             schema: {
               type: 'object',
-              required: ['organizationName'],
+              required: ['organizationName', 'planId'],
               properties: {
                 organizationName: {
                   type: 'string',
@@ -35,6 +45,12 @@ export const tenantPaths = {
                   example: 'My Cricket Club',
                   'x-input-type': 'text',
                   'x-placeholder': 'Enter your organization name'
+                },
+                planId: {
+                  type: 'integer',
+                  description: 'Select subscription plan for tenant',
+                  example: 1,
+                  'x-input-type': 'select',
                 }
               }
             }
@@ -42,13 +58,18 @@ export const tenantPaths = {
           'application/x-www-form-urlencoded': {
             schema: {
               type: 'object',
-              required: ['organizationName'],
+              required: ['organizationName', 'planId'],
               properties: {
                 organizationName: {
                   type: 'string',
                   minLength: 2,
                   maxLength: 100,
                   description: 'Organization name'
+                },
+                planId: {
+                  type: 'integer',
+                  description: 'Select subscription plan for tenant',
+                  example: 1
                 }
               }
             }
@@ -71,7 +92,7 @@ export const tenantPaths = {
                       id: { type: 'integer', example: 1 },
                       name: { type: 'string', example: 'My Cricket Club' },
                       owner_user_id: { type: 'integer', example: 123 },
-                      plan_id: { type: 'integer', nullable: true, example: null },
+                      plan_id: { type: 'integer', example: 1 },
                       createdAt: { type: 'string', format: 'date-time' },
                       updatedAt: { type: 'string', format: 'date-time' }
                     }

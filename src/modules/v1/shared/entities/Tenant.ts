@@ -33,7 +33,7 @@ export class Tenant {
   owner: User;
 
   // Current active plan
-  @Column({ nullable: true })
+  @Column()
   plan_id: number;
 
   @ManyToOne(() => Plan)

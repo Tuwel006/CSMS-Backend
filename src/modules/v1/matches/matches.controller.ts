@@ -46,15 +46,34 @@ export class MatchesController {
     static async getMatches(req: AuthRequest, res: Response) {
         try {
             const tenantId = req.user?.tenantId;
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const status = req.query.status as string;
 
             if (!tenantId) {
                 const response = ApiResponse.forbidden('Tenant ID is required');
                 return res.status(response.status).json(response);
             }
 
-            const matches = await MatchesService.getMatches(tenantId);
+            const matches = await MatchesService.getTenantMatches(tenantId, page, limit, status);
 
             const response = ApiResponse.success(matches, 'Matches retrieved successfully');
+            res.status(response.status).json(response);
+        } catch (error: any) {
+            const errorResponse = ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+
+    static async getAllMatches(req: AuthRequest, res: Response) {
+        try {
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const sortBy = (req.query.sortBy as string) || 'createdAt';
+
+            const matches = await MatchesService.getAllMatches(page, limit, sortBy);
+
+            const response = ApiResponse.success(matches, 'All matches retrieved successfully');
             res.status(response.status).json(response);
         } catch (error: any) {
             const errorResponse = ApiResponse.badRequest(error.message);

@@ -1,5 +1,6 @@
 export interface CreateTenantDto {
   organizationName: string;
+  planId: number;
 }
 
 export interface UpdateTenantDto {

@@ -15,9 +15,9 @@ export class TenantController {
   static async createTenant(req: Request<{}, {}, CreateTenantDto>, res: Response) {
     try {
       const userId = (req as AuthRequest).user!.id;
-      const { organizationName } = req.body;
+      const { organizationName, planId } = req.body;
       
-      const tenant = await TenantService.createTenant(userId, organizationName);
+      const tenant = await TenantService.createTenant(userId, organizationName, planId);
       
       const response = ApiResponse.created(tenant, 'Tenant created successfully');
       res.status(response.status).json(response);

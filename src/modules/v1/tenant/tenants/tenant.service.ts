@@ -5,7 +5,7 @@ import { User } from '../../shared/entities/User';
 import { HTTP_STATUS } from '../../../../constants/status-codes';
 
 export class TenantService {
-  static async createTenant(userId: number, organizationName: string) {
+  static async createTenant(userId: number, organizationName: string, planId: number) {
     const queryRunner = AppDataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -23,7 +23,8 @@ export class TenantService {
       // Create tenant
       const tenant = tenantRepository.create({
         name: organizationName,
-        owner_user_id: userId
+        owner_user_id: userId,
+        plan_id: planId,
       });
       
       const savedTenant = await tenantRepository.save(tenant);

@@ -25,7 +25,7 @@ router.use('/teams', authMiddleware, teamRoutes);
 // Players routes
 router.use('/players', authMiddleware, playerRoutes);
 
-// Matches routes
-router.use('/matches', authMiddleware, matchesRoutes);
+// Matches routes (auth handled in matches.routes.ts)
+router.use('/matches', matchesRoutes);
 
 export default router;

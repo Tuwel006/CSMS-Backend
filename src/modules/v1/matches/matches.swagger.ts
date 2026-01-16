@@ -704,13 +704,33 @@ export const matchesPaths = {
             }
         },
         get: {
-            summary: 'Get all matches',
-            description: 'Retrieves all matches',
+            summary: 'Get tenant matches with pagination',
+            description: 'Retrieves matches for the authenticated tenant with pagination and filtering. Tenant ID is automatically extracted from the authentication token.',
             tags: ['Matches'],
             security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'page',
+                    in: 'query',
+                    schema: { type: 'integer', default: 1 },
+                    description: 'Page number'
+                },
+                {
+                    name: 'limit',
+                    in: 'query',
+                    schema: { type: 'integer', default: 10 },
+                    description: 'Items per page'
+                },
+                {
+                    name: 'status',
+                    in: 'query',
+                    schema: { type: 'string', enum: ['LIVE', 'UPCOMING', 'COMPLETED'] },
+                    description: 'Filter by match status'
+                }
+            ],
             responses: {
                 200: {
-                    description: 'List of matches',
+                    description: 'Paginated list of matches',
                     content: {
                         'application/json': {
                             schema: {
@@ -719,21 +739,209 @@ export const matchesPaths = {
                                     status: { type: 'integer', example: 200 },
                                     message: { type: 'string', example: 'Matches retrieved successfully' },
                                     data: {
-                                        type: 'array',
-                                        items: {
-                                            type: 'object',
-                                            properties: {
-                                                id: { type: 'integer', example: 1 },
-                                                team_a_id: { type: 'integer', example: 1 },
-                                                team_b_id: { type: 'integer', example: 2 },
-                                                match_date: { type: 'string', format: 'date-time', example: '2023-10-25T14:30:00Z' },
-                                                format: { type: 'string', example: 'T20' },
-                                                venue: { type: 'string', example: 'Wankhede Stadium, Mumbai' },
-                                                status: { type: 'string', example: 'SCHEDULED' },
-                                                is_active: { type: 'boolean', example: true },
-                                                tenant_id: { type: 'integer', example: 1 },
-                                                createdAt: { type: 'string', format: 'date-time' },
-                                                updatedAt: { type: 'string', format: 'date-time' }
+                                        type: 'object',
+                                        properties: {
+                                            data: {
+                                                type: 'array',
+                                                items: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        meta: {
+                                                            type: 'object',
+                                                            properties: {
+                                                                matchId: { type: 'string', example: 'CSMSMATCH123456' },
+                                                                format: { type: 'string', example: 'T20' },
+                                                                status: { type: 'string', example: 'LIVE' },
+                                                                lastUpdated: { type: 'string', format: 'date-time' }
+                                                            }
+                                                        },
+                                                        teams: {
+                                                            type: 'object',
+                                                            properties: {
+                                                                A: {
+                                                                    type: 'object',
+                                                                    properties: {
+                                                                        id: { type: 'integer', example: 1 },
+                                                                        name: { type: 'string', example: 'Mumbai Indians' },
+                                                                        short: { type: 'string', example: 'MI' }
+                                                                    }
+                                                                },
+                                                                B: {
+                                                                    type: 'object',
+                                                                    properties: {
+                                                                        id: { type: 'integer', example: 2 },
+                                                                        name: { type: 'string', example: 'Chennai Super Kings' },
+                                                                        short: { type: 'string', example: 'CSK' }
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        innings: {
+                                                            type: 'array',
+                                                            items: {
+                                                                type: 'object',
+                                                                properties: {
+                                                                    i: { type: 'integer', example: 1 },
+                                                                    battingTeam: { type: 'string', example: 'MI' },
+                                                                    bowlingTeam: { type: 'string', example: 'CSK' },
+                                                                    score: {
+                                                                        type: 'object',
+                                                                        properties: {
+                                                                            r: { type: 'integer', example: 150 },
+                                                                            w: { type: 'integer', example: 5 },
+                                                                            b: { type: 'integer', example: 120 }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            meta: {
+                                                type: 'object',
+                                                properties: {
+                                                    page: { type: 'integer', example: 1 },
+                                                    limit: { type: 'integer', example: 10 },
+                                                    total: { type: 'integer', example: 50 },
+                                                    totalPages: { type: 'integer', example: 5 },
+                                                    hasNextPage: { type: 'boolean', example: true },
+                                                    hasPreviousPage: { type: 'boolean', example: false }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                401: {
+                    description: 'Unauthorized',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                403: {
+                    description: 'Forbidden',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    '/api/v1/matches/all': {
+        get: {
+            summary: 'Get all matches across all tenants with pagination',
+            description: 'Retrieves matches from all tenants with pagination and sorting by recent or match date',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'page',
+                    in: 'query',
+                    schema: { type: 'integer', default: 1 },
+                    description: 'Page number'
+                },
+                {
+                    name: 'limit',
+                    in: 'query',
+                    schema: { type: 'integer', default: 10 },
+                    description: 'Items per page'
+                },
+                {
+                    name: 'sortBy',
+                    in: 'query',
+                    schema: { type: 'string', enum: ['createdAt', 'match_date'], default: 'createdAt' },
+                    description: 'Sort matches by field (createdAt for recent, match_date for scheduled date)'
+                }
+            ],
+            responses: {
+                200: {
+                    description: 'Paginated list of all matches',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    status: { type: 'integer', example: 200 },
+                                    message: { type: 'string', example: 'All matches retrieved successfully' },
+                                    data: {
+                                        type: 'object',
+                                        properties: {
+                                            data: {
+                                                type: 'array',
+                                                items: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        meta: {
+                                                            type: 'object',
+                                                            properties: {
+                                                                matchId: { type: 'string', example: 'CSMSMATCH123456' },
+                                                                format: { type: 'string', example: 'T20' },
+                                                                status: { type: 'string', example: 'LIVE' },
+                                                                lastUpdated: { type: 'string', format: 'date-time' },
+                                                                tenantId: { type: 'integer', example: 1 }
+                                                            }
+                                                        },
+                                                        teams: {
+                                                            type: 'object',
+                                                            properties: {
+                                                                A: {
+                                                                    type: 'object',
+                                                                    properties: {
+                                                                        id: { type: 'integer', example: 1 },
+                                                                        name: { type: 'string', example: 'Mumbai Indians' },
+                                                                        short: { type: 'string', example: 'MI' }
+                                                                    }
+                                                                },
+                                                                B: {
+                                                                    type: 'object',
+                                                                    properties: {
+                                                                        id: { type: 'integer', example: 2 },
+                                                                        name: { type: 'string', example: 'Chennai Super Kings' },
+                                                                        short: { type: 'string', example: 'CSK' }
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        innings: {
+                                                            type: 'array',
+                                                            items: {
+                                                                type: 'object',
+                                                                properties: {
+                                                                    i: { type: 'integer', example: 1 },
+                                                                    battingTeam: { type: 'string', example: 'MI' },
+                                                                    bowlingTeam: { type: 'string', example: 'CSK' },
+                                                                    score: {
+                                                                        type: 'object',
+                                                                        properties: {
+                                                                            r: { type: 'integer', example: 150 },
+                                                                            w: { type: 'integer', example: 5 },
+                                                                            b: { type: 'integer', example: 120 }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            meta: {
+                                                type: 'object',
+                                                properties: {
+                                                    page: { type: 'integer', example: 1 },
+                                                    limit: { type: 'integer', example: 10 },
+                                                    total: { type: 'integer', example: 100 },
+                                                    totalPages: { type: 'integer', example: 10 },
+                                                    hasNextPage: { type: 'boolean', example: true },
+                                                    hasPreviousPage: { type: 'boolean', example: false }
+                                                }
                                             }
                                         }
                                     }

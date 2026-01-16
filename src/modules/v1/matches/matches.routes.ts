@@ -5,7 +5,10 @@ import { authMiddleware, tenantAdminOnly } from '../shared/middlewares/auth.midd
 
 const router = Router();
 
-// Apply auth middleware to all routes
+// Public routes (no authentication required)
+router.get('/all', MatchesController.getAllMatches);
+
+// Apply auth middleware to all routes below
 router.use(authMiddleware);
 router.use(tenantAdminOnly);
 
