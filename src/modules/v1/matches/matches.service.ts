@@ -406,7 +406,179 @@ export class MatchesService {
         }
     }
 
-    static async getMatchScore(matchId: string, tenant_id: number) {
+static async getMatchScore(matchId: string, tenant_id: number) {
+  const matchRepo = AppDataSource.getRepository(Match);
+  const inningsRepo = AppDataSource.getRepository(MatchInnings);
+  const battingRepo = AppDataSource.getRepository(InningsBatting);
+  const bowlingRepo = AppDataSource.getRepository(InningsBowling);
+  const ballRepo = AppDataSource.getRepository(BallByBall);
+
+  /* 1️⃣ Get match + innings (PARALLEL) */
+  const [match, inningsList] = await Promise.all([
+    matchRepo.findOne({
+      where: { id: matchId, tenant_id },
+      relations: ['teamA', 'teamB']
+    }),
+    inningsRepo.find({
+      where: { match_id: matchId, tenant_id },
+      relations: ['battingTeam', 'bowlingTeam'],
+      order: { innings_number: 'ASC' }
+    })
+  ]);
+
+  if (!match) {
+    throw { status: 404, message: 'Match not found' };
+  }
+
+  /* 2️⃣ Build innings response */
+  const inningsData = await Promise.all(
+    inningsList.map(async (inning) => {
+
+      /* 🔹 Fetch only what is needed */
+      const [
+        batsmen,
+        bowlers,
+        currentBowler,
+        currentOverBalls
+      ] = await Promise.all([
+        battingRepo.find({
+          where: { innings_id: inning.id, tenant_id },
+          relations: ['player', 'bowler', 'fielder']
+        }),
+        bowlingRepo.find({
+          where: { innings_id: inning.id, tenant_id },
+          relations: ['player']
+        }),
+        bowlingRepo.findOne({
+          where: {
+            innings_id: inning.id,
+            tenant_id,
+            is_current_bowler: true
+          },
+          relations: ['player']
+        }),
+        ballRepo.find({
+          where: {
+            innings_id: inning.id,
+            over_number: inning.current_over,
+            tenant_id
+          },
+          order: { ball_number: 'ASC' }
+        })
+      ]);
+
+      /* 3️⃣ Striker & non-striker */
+      const striker = batsmen.find(b => b.is_striker && !b.is_out);
+      const nonStriker = batsmen.find(b => !b.is_striker && !b.is_out);
+
+      /* 4️⃣ Dismissed batsmen */
+      const dismissed = batsmen
+        .filter(b => b.is_out)
+        .map((b) => ({
+          id: b.player.id,
+          n: b.player.full_name,
+          r: b.runs,
+          b: b.balls,
+          w: {
+            type: b.wicket_type,
+            bowler: b.bowler?.full_name || null,
+            fielder: b.fielder?.full_name || null
+          },
+          o: b.dismissal_over
+        }));
+
+      /* 5️⃣ isOverComplete (NO DB QUERY) */
+      const isOverComplete = inning.balls % 6 === 0 && inning.balls > 0;
+
+      return {
+        i: inning.innings_number,
+        battingTeam: inning.battingTeam.short_name,
+        bowlingTeam: inning.bowlingTeam.short_name,
+
+        score: {
+          r: inning.runs,
+          w: inning.wickets,
+          b: inning.balls
+        },
+
+        batting: {
+          striker: striker && {
+            id: striker.player.id,
+            n: striker.player.full_name,
+            r: striker.runs,
+            b: striker.balls,
+            '4s': striker.fours,
+            '6s': striker.sixes,
+            sr: striker.strike_rate
+          },
+          nonStriker: nonStriker && {
+            id: nonStriker.player.id,
+            n: nonStriker.player.full_name,
+            r: nonStriker.runs,
+            b: nonStriker.balls,
+            '4s': nonStriker.fours,
+            '6s': nonStriker.sixes,
+            sr: nonStriker.strike_rate
+          }
+        },
+
+        dismissed,
+
+        bowling: bowlers.map(b => ({
+          id: b.player.id,
+          n: b.player.full_name,
+          b: b.balls,
+          r: b.runs,
+          w: b.wickets,
+          e: b.economy
+        })),
+
+        currentOver: {
+          o: inning.current_over,
+          isOverComplete,
+          bowlerId: currentBowler?.player.id || null,
+          ballsCount: currentOverBalls.length,
+          illegalBallsCount: currentOverBalls.filter(ball => 
+            ['WIDE', 'NO_BALL'].includes(ball.ball_type)
+          ).length,
+          balls: currentOverBalls.map(ball => ({
+            b: ball.ball_number,
+            t: ball.ball_type,
+            r: ball.is_wicket ? 'W' : ball.runs
+          }))
+        }
+      };
+    })
+  );
+
+  /* 6️⃣ Final response */
+  return {
+    success: true,
+    data: {
+      meta: {
+        matchId: match.id,
+        format: match.format,
+        status: match.status,
+        lastUpdated: match.updatedAt
+      },
+      teams: {
+        A: {
+          id: match.teamA.id,
+          name: match.teamA.name,
+          short: match.teamA.short_name
+        },
+        B: {
+          id: match.teamB.id,
+          name: match.teamB.name,
+          short: match.teamB.short_name
+        }
+      },
+      innings: inningsData
+    }
+  };
+}
+
+    static async getPublicMatchScore(matchId: string, tenant_id: number) {
   const matchRepo = AppDataSource.getRepository(Match);
   const inningsRepo = AppDataSource.getRepository(MatchInnings);
   const battingRepo = AppDataSource.getRepository(InningsBatting);
@@ -622,7 +794,7 @@ export class MatchesService {
             const ballRepository = queryRunner.manager.getRepository(BallByBall);
 
             const { 
-                innings_id, ball_type, runs = 0, batsman_id, bowler_id, is_wicket = false, 
+                innings_id, ball_type, runs = 0, is_wicket = false, 
                 is_boundary = false, by_runs = 0, wicket
             } = ballData;
 
@@ -641,6 +813,11 @@ export class MatchesService {
             });
 
             if (!innings) throw new Error('Innings not found');
+
+            const strikerId = innings.striker_id;
+            const nonStrikerId = innings.non_striker_id;
+            const bowlerId = innings.current_bowler_id;
+
 
             // Calculate final values (innings becomes stale after updates)
             const totalRuns = innings.runs + runsToAdd;
@@ -667,13 +844,14 @@ export class MatchesService {
                     wickets: () => `wickets + ${is_wicket ? 1 : 0}`,
                     balls: () => `balls + ${ballsToAdd}`,
                     extras: () => `extras + ${by_runs + extraRuns}`,
-                    ...(isOverComplete && { current_over: () => 'current_over + 1' })
+                    ...(isOverComplete && { current_over: () => 'current_over + 1' }),
+                    ...(shouldFlipStrike && { striker_id: nonStrikerId, non_striker_id: strikerId })
                 }
             );
 
             // 2. Update batsman (atomic SQL)
             await battingRepository.update(
-                { innings_id, player_id: batsman_id, tenant_id },
+                { innings_id, player_id: strikerId, tenant_id },
                 {
                     runs: () => `runs + ${runs}`,
                     balls: () => `balls + ${ballsToAdd}`,
@@ -690,24 +868,13 @@ export class MatchesService {
 
             // 3. Update bowler (atomic SQL)
             await bowlingRepository.update(
-                { innings_id, player_id: bowler_id, tenant_id },
+                { innings_id, player_id: bowlerId, tenant_id },
                 {
                     runs: () => `runs + ${runsToAdd}`,
                     ...(is_wicket && { wickets: () => 'wickets + 1' }),
                     ...(isLegalBall && { balls: () => 'balls + 1' })
                 }
             );
-
-            // 4. Handle strike rotation
-            if (shouldFlipStrike) {
-                await battingRepository
-                    .createQueryBuilder()
-                    .update(InningsBatting)
-                    .set({ is_striker: () => 'NOT is_striker' })
-                    .where('innings_id = :innings_id AND tenant_id = :tenant_id AND is_out = false', 
-                        { innings_id, tenant_id })
-                    .execute();
-            }
 
             // 5. Handle over completion
             if (isOverComplete) {
@@ -725,8 +892,8 @@ export class MatchesService {
                 ball_number: ballNumber,
                 ball_type,
                 runs,
-                batsman_id,
-                bowler_id,
+                batsman_id: strikerId,
+                bowler_id: bowlerId,
                 is_boundary,
                 is_wicket,
                 wicket_type: wicket?.wicket_type,
@@ -770,7 +937,7 @@ export class MatchesService {
                 currentOver: {
                     o: isOverComplete ? innings.current_over + 1 : innings.current_over,
                     isOverComplete,
-                    bowlerId: bowler_id,
+                    bowlerId,
                     ballsCount: currentOverBalls.length,
                     illegalBallsCount,
                     balls: currentOverBalls.map(ball => ({
@@ -854,6 +1021,7 @@ export class MatchesService {
     }
 
     static async setBatsman(matchId: string, batsmanData: any, tenant_id: number) {
+        const inningsRepository = AppDataSource.getRepository(MatchInnings);
         const battingRepository = AppDataSource.getRepository(InningsBatting);
         
         const { innings_id, player_id, is_striker, ret_hurt } = batsmanData;
@@ -902,6 +1070,13 @@ export class MatchesService {
         });
         
         await battingRepository.save(batsman);
+        await inningsRepository.update(
+            { id: innings_id, tenant_id },
+            newBatsmanIsStriker
+                ? { striker_id: batsman.id }
+                : { non_striker_id: batsman.id }
+            );
+
         return { success: true, message: 'Batsman set successfully' };
     }
 

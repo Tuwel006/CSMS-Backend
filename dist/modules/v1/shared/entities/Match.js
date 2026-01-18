@@ -92,7 +92,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Match.prototype, "current_innings_id", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => MatchInnings_1.MatchInnings),
+    (0, typeorm_1.OneToOne)(() => MatchInnings_1.MatchInnings),
     (0, typeorm_1.JoinColumn)({ name: 'current_innings_id' }),
     __metadata("design:type", MatchInnings_1.MatchInnings)
 ], Match.prototype, "currentInnings", void 0);
@@ -126,6 +126,10 @@ __decorate([
     (0, typeorm_1.JoinColumn)({ name: 'tenant_id' }),
     __metadata("design:type", Tenant_1.Tenant)
 ], Match.prototype, "tenant", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => MatchInnings_1.MatchInnings, innings => innings.match),
+    __metadata("design:type", Array)
+], Match.prototype, "innings", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

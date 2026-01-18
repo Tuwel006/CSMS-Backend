@@ -39,7 +39,7 @@ __decorate([
     __metadata("design:type", User_1.User)
 ], Tenant.prototype, "owner", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
 ], Tenant.prototype, "plan_id", void 0);
 __decorate([

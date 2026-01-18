@@ -91,12 +91,12 @@ __decorate([
     __metadata("design:type", Player_1.Player)
 ], InningsBatting.prototype, "player", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => Player_1.Player),
+    (0, typeorm_1.ManyToOne)(() => Player_1.Player, { nullable: true }),
     (0, typeorm_1.JoinColumn)({ name: 'bowler_id' }),
     __metadata("design:type", Player_1.Player)
 ], InningsBatting.prototype, "bowler", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => Player_1.Player),
+    (0, typeorm_1.ManyToOne)(() => Player_1.Player, { nullable: true }),
     (0, typeorm_1.JoinColumn)({ name: 'fielder_id' }),
     __metadata("design:type", Player_1.Player)
 ], InningsBatting.prototype, "fielder", void 0);

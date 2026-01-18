@@ -7,8 +7,8 @@ class TenantController {
     static async createTenant(req, res) {
         try {
             const userId = req.user.id;
-            const { organizationName } = req.body;
-            const tenant = await tenant_service_1.TenantService.createTenant(userId, organizationName);
+            const { organizationName, planId } = req.body;
+            const tenant = await tenant_service_1.TenantService.createTenant(userId, organizationName, planId);
             const response = ApiResponse_1.ApiResponse.created(tenant, 'Tenant created successfully');
             res.status(response.status).json(response);
         }

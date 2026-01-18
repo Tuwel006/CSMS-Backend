@@ -37,23 +37,36 @@ exports.connectDB = exports.AppDataSource = void 0;
 require("reflect-metadata");
 const typeorm_1 = require("typeorm");
 const dotenv = __importStar(require("dotenv"));
-dotenv.config();
+if (process.env.DOTENV_CONFIG_PATH) {
+    dotenv.config({ path: process.env.DOTENV_CONFIG_PATH });
+}
+else {
+    dotenv.config();
+}
 const isStaging = process.env.NODE_ENV === 'staging';
+const isProduction = process.env.NODE_ENV === 'production';
+const isDevelopment = process.env.NODE_ENV === 'development';
 exports.AppDataSource = new typeorm_1.DataSource({
     type: 'postgres',
     host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT),
+    port: Number(process.env.DB_PORT || 5432),
     username: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
     synchronize: true,
     logging: false,
     entities: [__dirname + '/../modules/v1/shared/entities/*.{ts,js}'],
-    ...(isStaging && {
-        ssl: {
-            rejectUnauthorized: false
-        }
-    })
+    ssl: (isStaging || isProduction || isDevelopment) ? {
+        rejectUnauthorized: false
+    } : false,
+    connectTimeoutMS: 10000,
+    extra: {
+        max: 5,
+        connectionTimeoutMillis: 10000,
+        idleTimeoutMillis: 30000,
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 10000
+    }
 });
 let isConnected = false;
 const connectDB = async () => {
@@ -64,7 +77,7 @@ const connectDB = async () => {
         if (!exports.AppDataSource.isInitialized) {
             await exports.AppDataSource.initialize();
             isConnected = true;
-            console.log(`PostgreSQL Connection Successfully (${isStaging ? 'Staging' : 'Development'}).`);
+            console.log(`PostgreSQL Connection Successfully (${isStaging ? 'Staging' : isProduction ? 'Production' : 'Development'}).`);
             console.log('Database synced successfully.');
         }
     }

@@ -7,6 +7,7 @@ const router = Router();
 
 // Public routes (no authentication required)
 router.get('/all', MatchesController.getAllMatches);
+router.get('/get-score/:id', MatchesController.getPublicMatchScore);
 
 // Apply auth middleware to all routes below
 router.use(authMiddleware);

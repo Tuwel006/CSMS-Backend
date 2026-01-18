@@ -6,7 +6,7 @@ const Tenant_1 = require("../../shared/entities/Tenant");
 const User_1 = require("../../shared/entities/User");
 const status_codes_1 = require("../../../../constants/status-codes");
 class TenantService {
-    static async createTenant(userId, organizationName) {
+    static async createTenant(userId, organizationName, planId) {
         const queryRunner = db_1.AppDataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -21,7 +21,8 @@ class TenantService {
             // Create tenant
             const tenant = tenantRepository.create({
                 name: organizationName,
-                owner_user_id: userId
+                owner_user_id: userId,
+                plan_id: planId,
             });
             const savedTenant = await tenantRepository.save(tenant);
             // Update user with tenant_id

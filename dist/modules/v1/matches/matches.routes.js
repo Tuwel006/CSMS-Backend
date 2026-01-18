@@ -6,7 +6,10 @@ const matches_controller_1 = require("./matches.controller");
 const team_setup_controller_1 = require("./team-setup.controller");
 const auth_middleware_1 = require("../shared/middlewares/auth.middleware");
 const router = (0, express_1.Router)();
-// Apply auth middleware to all routes
+// Public routes (no authentication required)
+router.get('/all', matches_controller_1.MatchesController.getAllMatches);
+router.get('/get-score/:id', matches_controller_1.MatchesController.getPublicMatchScore);
+// Apply auth middleware to all routes below
 router.use(auth_middleware_1.authMiddleware);
 router.use(auth_middleware_1.tenantAdminOnly);
 router.post('/team-setup', team_setup_controller_1.TeamSetupController.setupTeam);

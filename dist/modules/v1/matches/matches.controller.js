@@ -40,12 +40,29 @@ class MatchesController {
     static async getMatches(req, res) {
         try {
             const tenantId = req.user?.tenantId;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const status = req.query.status;
             if (!tenantId) {
                 const response = ApiResponse_1.ApiResponse.forbidden('Tenant ID is required');
                 return res.status(response.status).json(response);
             }
-            const matches = await matches_service_1.MatchesService.getMatches(tenantId);
+            const matches = await matches_service_1.MatchesService.getTenantMatches(tenantId, page, limit, status);
             const response = ApiResponse_1.ApiResponse.success(matches, 'Matches retrieved successfully');
+            res.status(response.status).json(response);
+        }
+        catch (error) {
+            const errorResponse = ApiResponse_1.ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+    static async getAllMatches(req, res) {
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const sortBy = req.query.sortBy || 'createdAt';
+            const matches = await matches_service_1.MatchesService.getAllMatches(page, limit, sortBy);
+            const response = ApiResponse_1.ApiResponse.success(matches, 'All matches retrieved successfully');
             res.status(response.status).json(response);
         }
         catch (error) {
@@ -185,6 +202,18 @@ class MatchesController {
                 return res.status(response.status).json(response);
             }
             const scoreData = await matches_service_1.MatchesService.getMatchScore(matchId, tenantId);
+            res.status(200).json(scoreData);
+        }
+        catch (error) {
+            const errorResponse = ApiResponse_1.ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+    static async getPublicMatchScore(req, res) {
+        try {
+            const matchId = req.params.id;
+            const tenantId = req.user?.tenantId;
+            const scoreData = await matches_service_1.MatchesService.getPublicMatchScore(matchId, tenantId); // Assuming tenantId = 1 for public access
             res.status(200).json(scoreData);
         }
         catch (error) {

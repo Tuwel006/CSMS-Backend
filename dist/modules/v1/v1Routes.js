@@ -23,6 +23,6 @@ router.use('/tenant', tenant_1.default);
 router.use('/teams', auth_middleware_1.authMiddleware, teams_1.teamRoutes);
 // Players routes
 router.use('/players', auth_middleware_1.authMiddleware, players_1.playerRoutes);
-// Matches routes
-router.use('/matches', auth_middleware_1.authMiddleware, matches_1.matchesRoutes);
+// Matches routes (auth handled in matches.routes.ts)
+router.use('/matches', matches_1.matchesRoutes);
 exports.default = router;

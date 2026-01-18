@@ -13,7 +13,6 @@ exports.BallByBall = void 0;
 const typeorm_1 = require("typeorm");
 const MatchInnings_1 = require("./MatchInnings");
 const Match_1 = require("./Match");
-const Team_1 = require("./Team");
 let BallByBall = class BallByBall {
 };
 exports.BallByBall = BallByBall;
@@ -30,19 +29,11 @@ __decorate([
     __metadata("design:type", Number)
 ], BallByBall.prototype, "innings_id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", Number)
-], BallByBall.prototype, "batting_team_id", void 0);
-__decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", Number)
-], BallByBall.prototype, "bowling_team_id", void 0);
-__decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", Number)
 ], BallByBall.prototype, "over_number", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", Number)
 ], BallByBall.prototype, "ball_number", void 0);
 __decorate([
@@ -87,16 +78,6 @@ __decorate([
     (0, typeorm_1.JoinColumn)({ name: 'innings_id' }),
     __metadata("design:type", MatchInnings_1.MatchInnings)
 ], BallByBall.prototype, "innings", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => Team_1.Team),
-    (0, typeorm_1.JoinColumn)({ name: 'batting_team_id' }),
-    __metadata("design:type", Team_1.Team)
-], BallByBall.prototype, "battingTeam", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => Team_1.Team),
-    (0, typeorm_1.JoinColumn)({ name: 'bowling_team_id' }),
-    __metadata("design:type", Team_1.Team)
-], BallByBall.prototype, "bowlingTeam", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

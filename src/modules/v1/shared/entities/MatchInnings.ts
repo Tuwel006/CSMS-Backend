@@ -48,6 +48,15 @@ export class MatchInnings {
   @Column({ default: false })
   is_completed: boolean;
 
+  @Column({ nullable: true })
+  striker_id: number;
+
+  @Column({ nullable: true })
+  non_striker_id: number;
+
+  @Column({ nullable: true })
+  current_bowler_id: number;
+
   @Column()
   tenant_id: number;
 

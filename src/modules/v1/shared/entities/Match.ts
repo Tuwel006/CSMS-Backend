@@ -6,6 +6,8 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToOne,
+  OneToMany,
 } from 'typeorm';
 import { Team } from './Team';
 import { Tenant } from './Tenant';
@@ -70,7 +72,7 @@ export class Match {
   @Column({ nullable: true })
   current_innings_id: number;
 
-  @ManyToOne(() => MatchInnings)
+  @OneToOne(() => MatchInnings)
   @JoinColumn({ name: 'current_innings_id' })
   currentInnings: MatchInnings;
 
@@ -97,6 +99,9 @@ export class Match {
   @ManyToOne(() => Tenant)
   @JoinColumn({ name: 'tenant_id' })
   tenant: Tenant;
+
+  @OneToMany(() => MatchInnings, innings => innings.match)
+  innings: MatchInnings[];
 
   @CreateDateColumn()
   createdAt: Date;

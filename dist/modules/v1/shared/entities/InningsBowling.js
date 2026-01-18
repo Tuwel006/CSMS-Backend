@@ -29,13 +29,17 @@ __decorate([
     __metadata("design:type", Number)
 ], InningsBowling.prototype, "player_id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 4, scale: 1, default: 0.0 }),
+    (0, typeorm_1.Column)({ default: 0 }),
     __metadata("design:type", Number)
-], InningsBowling.prototype, "overs", void 0);
+], InningsBowling.prototype, "over", void 0);
 __decorate([
     (0, typeorm_1.Column)({ default: 0 }),
     __metadata("design:type", Number)
 ], InningsBowling.prototype, "runs", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 0 }),
+    __metadata("design:type", Number)
+], InningsBowling.prototype, "balls", void 0);
 __decorate([
     (0, typeorm_1.Column)({ default: 0 }),
     __metadata("design:type", Number)

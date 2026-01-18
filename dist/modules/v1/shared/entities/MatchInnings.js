@@ -53,6 +53,10 @@ __decorate([
     __metadata("design:type", Number)
 ], MatchInnings.prototype, "balls", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ default: 1 }),
+    __metadata("design:type", Number)
+], MatchInnings.prototype, "current_over", void 0);
+__decorate([
     (0, typeorm_1.Column)({ default: 0 }),
     __metadata("design:type", Number)
 ], MatchInnings.prototype, "extras", void 0);
@@ -60,6 +64,18 @@ __decorate([
     (0, typeorm_1.Column)({ default: false }),
     __metadata("design:type", Boolean)
 ], MatchInnings.prototype, "is_completed", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], MatchInnings.prototype, "striker_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], MatchInnings.prototype, "non_striker_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], MatchInnings.prototype, "current_bowler_id", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", Number)

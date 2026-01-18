@@ -243,6 +243,18 @@ export class MatchesController {
         }
     }
 
+    static async getPublicMatchScore(req: AuthRequest, res: Response) {
+        try {
+            const matchId = req.params.id;
+            const tenantId = req.user?.tenantId;
+            const scoreData = await MatchesService.getPublicMatchScore(matchId, tenantId!); // Assuming tenantId = 1 for public access
+            res.status(200).json(scoreData);
+        } catch (error: any) {
+            const errorResponse = ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+
     static async getAvailableBatsmen(req: AuthRequest, res: Response) {
         try {
             const matchId = req.params.id;
