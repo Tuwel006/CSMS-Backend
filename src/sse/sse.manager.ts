@@ -1,10 +1,11 @@
 import { Response } from "express";
+import { LiveScorePayload } from "../types/score.type";
 
 class SSEManager {
     private static instance: SSEManager;
     private clients: Map<string, Set<Response>> = new Map();
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance(): SSEManager {
         if (!SSEManager.instance) {
@@ -26,7 +27,7 @@ class SSEManager {
         }
     }
 
-    public broadcast(matchId: string, event: string, data: any): void {
+    public broadcast(matchId: string, event: string, data: LiveScorePayload): void {
         const payload = `event: ${event} \ndata: ${JSON.stringify(data)}\n\n`;
         if (this.clients.has(matchId)) {
             this.clients.get(matchId)!.forEach(res => {

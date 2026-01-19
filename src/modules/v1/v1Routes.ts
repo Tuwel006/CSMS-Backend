@@ -6,7 +6,7 @@ import { teamRoutes } from './teams';
 import { playerRoutes } from './players';
 import { matchesRoutes } from './matches';
 import { authMiddleware } from './shared/middlewares/auth.middleware';
-import sseRoutes from './sse/sse.routes';
+import sseRoutes from './sse';
 
 const router = Router();
 
