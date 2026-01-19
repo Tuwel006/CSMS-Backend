@@ -8,6 +8,7 @@ export class LiveScoreService {
     // Implementation for live score service
     static async scoreEventService(matchId: string, inningsId: number): Promise<void> {
         const payload = await LiveScoreQuery.build(matchId, inningsId);
+        console.log("🚀 Debug - LiveScoreService - scoreEventService - payload:", payload);
         redisService.setScore({ matchId, inningsId, payload });
         sseManager.broadcast(matchId, "score", payload);
     }

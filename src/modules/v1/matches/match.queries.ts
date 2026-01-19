@@ -5,6 +5,7 @@ import { InningsBatting } from "../shared/entities/InningsBatting";
 import { MatchInnings } from "../shared/entities/MatchInnings";
 
 export class LiveScoreQuery {
+    // need to be fixed after adding cuurent bowler id, striker id, non striker id and current innings id so that depended of current innings
     static async build(matchId: string, inningsId: number): Promise<import("../../../types/score.type").LiveScorePayload> {
         // Use one-to-one relation for striker/non-striker, fetch by inningsId
         const inningsRepo = AppDataSource.getRepository(MatchInnings);
@@ -19,13 +20,27 @@ export class LiveScoreQuery {
         if (!innings) throw { status: 404, message: "Innings not found" };
 
         // 2. Get striker and non-striker batsmen by their ids (one-to-one, join player)
-        const batsmen = await battingRepo.createQueryBuilder("bat")
-            .leftJoinAndSelect("bat.player", "player")
-            .where("bat.id IN (:...ids)", { ids: [innings.striker_id, innings.non_striker_id] })
-            .select(["bat.id", "bat.runs", "bat.balls", "bat.fours", "bat.sixes", "player.id", "player.full_name"])
-            .getMany();
-        const striker = batsmen.find(b => b.id === innings.striker_id);
-        const nonStriker = batsmen.find(b => b.id === innings.non_striker_id);
+        // Filter out null/undefined IDs
+        const batsmanIds = [innings.striker_id, innings.non_striker_id].filter(id => id != null);
+
+        let striker = null;
+        let nonStriker = null;
+
+        if (batsmanIds.length > 0) {
+            const batsmen = await battingRepo.createQueryBuilder("bat")
+                .leftJoinAndSelect("bat.player", "player")
+                .where("bat.id IN (:...ids)", { ids: batsmanIds })
+                .getMany();
+
+            console.log("🔍 Debug - Innings striker_id:", innings.striker_id, "non_striker_id:", innings.non_striker_id);
+            console.log("🔍 Debug - Batsmen found:", batsmen.length, batsmen.map(b => ({ id: b.id, player: b.player?.full_name })));
+
+            striker = batsmen.find(b => b.id === innings.striker_id);
+            nonStriker = batsmen.find(b => b.id === innings.non_striker_id);
+
+            console.log("🔍 Debug - Striker:", striker ? { id: striker.id, player: striker.player?.full_name } : null);
+            console.log("🔍 Debug - Non-striker:", nonStriker ? { id: nonStriker.id, player: nonStriker.player?.full_name } : null);
+        }
 
         // 3. Get current over balls (minimal fields)
         const currentOverBalls = await ballRepo.createQueryBuilder("ball")
