@@ -6,6 +6,7 @@ import { teamRoutes } from './teams';
 import { playerRoutes } from './players';
 import { matchesRoutes } from './matches';
 import { authMiddleware } from './shared/middlewares/auth.middleware';
+import sseRoutes from './sse/sse.routes';
 
 const router = Router();
 
@@ -27,5 +28,8 @@ router.use('/players', authMiddleware, playerRoutes);
 
 // Matches routes (auth handled in matches.routes.ts)
 router.use('/matches', matchesRoutes);
+
+//sse routes
+router.use('/sse', sseRoutes);
 
 export default router;

@@ -1,3 +1,7 @@
+    /**
+     * Returns a fast, minimal LiveScorePayload for SSE
+     */
+    
 import { AppDataSource } from '../../../config/db';
 import { Match } from '../shared/entities/Match';
 import { Team } from '../shared/entities/Team';
@@ -954,6 +958,67 @@ static async getMatchScore(matchId: string, tenant_id: number) {
         } finally {
             await queryRunner.release();
         }
+    }
+
+
+    static async sseLiveScore(matchId: string, inningsId: number, tenant_id: number): Promise<import("../../../types/score.type").LiveScorePayload> {
+        // Use one-to-one relation for striker/non-striker, fetch by inningsId
+        const inningsRepo = AppDataSource.getRepository(MatchInnings);
+        const battingRepo = AppDataSource.getRepository(InningsBatting);
+        const ballRepo = AppDataSource.getRepository(BallByBall);
+
+        // 1. Get innings by id (with striker_id, non_striker_id)
+        const innings = await inningsRepo.createQueryBuilder("inn")
+            .where("inn.id = :inningsId AND inn.match_id = :matchId AND inn.tenant_id = :tenant_id", { inningsId, matchId, tenant_id })
+            .select(["inn.id", "inn.runs", "inn.wickets", "inn.balls", "inn.current_over", "inn.striker_id", "inn.non_striker_id"])
+            .getOne();
+        if (!innings) throw { status: 404, message: "Innings not found" };
+
+        // 2. Get striker and non-striker batsmen by their ids (one-to-one, join player)
+        const batsmen = await battingRepo.createQueryBuilder("bat")
+            .leftJoinAndSelect("bat.player", "player")
+            .where("bat.id IN (:...ids) AND bat.tenant_id = :tid", { ids: [innings.striker_id, innings.non_striker_id], tid: tenant_id })
+            .select(["bat.id", "bat.runs", "bat.balls", "bat.fours", "bat.sixes", "player.id", "player.full_name"])
+            .getMany();
+        const striker = batsmen.find(b => b.id === innings.striker_id);
+        const nonStriker = batsmen.find(b => b.id === innings.non_striker_id);
+
+        // 3. Get current over balls (minimal fields)
+        const currentOverBalls = await ballRepo.createQueryBuilder("ball")
+            .where("ball.innings_id = :iid AND ball.over_number = :over AND ball.tenant_id = :tid", { iid: innings.id, over: innings.current_over, tid: tenant_id })
+            .select(["ball.ball_type", "ball.runs", "ball.is_wicket"])
+            .orderBy("ball.ball_number", "ASC")
+            .getMany();
+
+        // 4. Map batsman to LiveBatsman
+        const mapBatsman = (b: any) => b && b.player ? ({
+            id: b.player.id,
+            n: b.player.full_name,
+            r: b.runs,
+            b: b.balls,
+            4: b.fours,
+            6: b.sixes
+        }) : null;
+
+        // 5. Map balls to OverBall type (object)
+        const mapBall = (ball: any) => {
+            let type = "";
+            if (ball.is_wicket) type = "W";
+            else if (["WIDE", "Wd"].includes(ball.ball_type)) type = "Wd";
+            else if (["NO_BALL", "Nb"].includes(ball.ball_type)) type = "Nb";
+            else type = String(ball.runs);
+            return { type, r: ball.runs };
+        };
+
+        return {
+            i: innings.id,
+            r: innings.runs,
+            w: innings.wickets,
+            b: innings.balls,
+            st: mapBatsman(striker) as any,
+            ns: mapBatsman(nonStriker) as any,
+            ov: currentOverBalls.map(mapBall)
+        };
     }
 
     static async getAvailableBatsmen(matchId: string, inningsNumber: number, tenant_id: number) {

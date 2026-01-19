@@ -9,7 +9,7 @@ const redis = new Redis({
     lazyConnect: false,
     maxRetriesPerRequest: null,
     enableReadyCheck: true,
-    retryStrategy(times) {
+    retryStrategy(times: number): number {
         return Math.min(times * 50, 2000);
     }
 });
@@ -20,7 +20,7 @@ redis.on('connect', () => console.log('Redis client connected')
 redis.on('ready', () => console.log('Redis client ready')
 );
 
-redis.on('error', (err) => console.error('Redis client error', err.message)
+redis.on('error', (err: any) => console.error('Redis client error', err.message)
 );
 
 export default redis;
