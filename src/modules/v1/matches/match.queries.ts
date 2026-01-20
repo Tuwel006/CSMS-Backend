@@ -32,14 +32,8 @@ export class LiveScoreQuery {
                 .where("bat.id IN (:...ids)", { ids: batsmanIds })
                 .getMany();
 
-            console.log("🔍 Debug - Innings striker_id:", innings.striker_id, "non_striker_id:", innings.non_striker_id);
-            console.log("🔍 Debug - Batsmen found:", batsmen.length, batsmen.map(b => ({ id: b.id, player: b.player?.full_name })));
-
-            striker = batsmen.find(b => b.id === innings.striker_id);
-            nonStriker = batsmen.find(b => b.id === innings.non_striker_id);
-
-            console.log("🔍 Debug - Striker:", striker ? { id: striker.id, player: striker.player?.full_name } : null);
-            console.log("🔍 Debug - Non-striker:", nonStriker ? { id: nonStriker.id, player: nonStriker.player?.full_name } : null);
+            striker = batsmen.find(b => b.id == innings.striker_id);
+            nonStriker = batsmen.find(b => b.id == innings.non_striker_id);
         }
 
         // 3. Get current over balls (minimal fields)

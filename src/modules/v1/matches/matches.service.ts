@@ -357,14 +357,7 @@ export class MatchesService {
                 throw { status: HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
             }
 
-            // Update match with toss and batting info
-            match.toss_winner_team_id = startData.toss_winner_team_id;
-            match.batting_first_team_id = startData.batting_first_team_id;
-            match.format = startData.over.toString();
-            match.status = 'LIVE';
-            await matchRepository.save(match);
-
-            // Initialize first innings
+            // Initialize and save first innings (to get ID)
             const firstInnings = inningsRepository.create({
                 match_id: matchId,
                 innings_number: 1,
@@ -373,6 +366,14 @@ export class MatchesService {
                 tenant_id
             });
             await inningsRepository.save(firstInnings);
+
+            // Update match with toss, batting info AND current innings ID (single update)
+            match.toss_winner_team_id = startData.toss_winner_team_id;
+            match.batting_first_team_id = startData.batting_first_team_id;
+            match.format = startData.over.toString();
+            match.status = 'LIVE';
+            match.current_innings_id = firstInnings.id;
+            await matchRepository.save(match);
 
             // Update playing 11 for both teams
             const allPlayingIds = [...startData.teamA.playing_11_id, ...startData.teamB.playing_11_id];
