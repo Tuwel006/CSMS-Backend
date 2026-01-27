@@ -6,12 +6,14 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { MatchInnings } from './MatchInnings';
 import { Match } from './Match';
 import { Team } from './Team';
 
 @Entity('ball_by_ball')
+@Index("idx_ball_innings_over", ["innings_id", "over_number"])
 export class BallByBall {
   @PrimaryGeneratedColumn()
   id: number;

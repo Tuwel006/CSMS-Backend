@@ -266,7 +266,7 @@ export class MatchesController {
                 return res.status(response.status).json(response);
             }
 
-            const result = await MatchesService.getAvailableBatsmen(matchId, inningsNumber, tenantId);
+            const result = await MatchesService.getAvailableBatsmen(matchId, inningsNumber);
             res.status(200).json(result);
         } catch (error: any) {
             const errorResponse = ApiResponse.badRequest(error.message);
@@ -285,7 +285,7 @@ export class MatchesController {
                 return res.status(response.status).json(response);
             }
 
-            const result = await MatchesService.getBowlingTeamPlayers(matchId, inningsNumber, tenantId);
+            const result = await MatchesService.getBowlingTeamPlayers(matchId, tenantId);
             res.status(200).json(result);
         } catch (error: any) {
             const errorResponse = ApiResponse.badRequest(error.message);

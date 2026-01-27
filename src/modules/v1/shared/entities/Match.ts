@@ -8,6 +8,7 @@ import {
   JoinColumn,
   OneToOne,
   OneToMany,
+  Index,
 } from 'typeorm';
 import { Team } from './Team';
 import { Tenant } from './Tenant';
@@ -20,6 +21,7 @@ export enum MatchFormat {
 }
 
 @Entity('matches')
+@Index("idx_match_current_innings", ["id", "tenant_id", "current_innings_id"])
 export class Match {
   @PrimaryColumn()
   id: string;

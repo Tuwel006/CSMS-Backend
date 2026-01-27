@@ -6,11 +6,14 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Match } from './Match';
 import { Team } from './Team';
 
 @Entity('match_innings')
+@Index("idx_match_innings_id_tenant", ["id", "tenant_id"])
+@Index("idx_match_innings_match", ["match_id", "tenant_id"])
 export class MatchInnings {
   @PrimaryGeneratedColumn()
   id: number;
