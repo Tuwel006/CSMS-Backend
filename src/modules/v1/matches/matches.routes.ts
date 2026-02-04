@@ -29,6 +29,7 @@ router.patch('/:id/complete', MatchesController.completeMatch);
 router.patch('/schedule/:id', MatchesController.scheduleMatch);
 router.patch('/start/:id', MatchesController.startMatch);
 router.post('/', MatchesController.createMatch);
+router.get('/tenant', MatchesController.getMatchesByTenant);
 router.get('/', MatchesController.getMatches);
 router.get('/:id', MatchesController.getMatchById);
 router.patch('/:id', MatchesController.updateMatch);

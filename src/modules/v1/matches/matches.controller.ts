@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { MatchesService } from './matches.service';
-import { CreateMatchDto, MatchStartDto, UpdateMatchDto } from './matches.dto';
+import { CreateMatchDto, GetMatchesQueryDto, MatchStartDto, UpdateMatchDto } from './matches.dto';
 import { ApiResponse } from '../../../utils/ApiResponse';
 import { AuthRequest } from '../../../types/auth.types';
 
@@ -36,6 +36,33 @@ export class MatchesController {
 
             const match = await MatchesService.generateMatchToken(tenantId);
             const response = ApiResponse.created(match, 'Match token generated successfully');
+            res.status(response.status).json(response);
+        } catch (error: any) {
+            const errorResponse = ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+
+    static async getMatchesByTenant(req: AuthRequest, res: Response) {
+        try {
+            const tenantId = req.user?.tenantId;
+
+            if (!tenantId) {
+                const response = ApiResponse.forbidden('Tenant ID is required');
+                return res.status(response.status).json(response);
+            }
+
+            const query: GetMatchesQueryDto = {
+                page: req.query.page ? parseInt(req.query.page as string) : undefined,
+                limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+                status: req.query.status as string,
+                sorted: req.query.sorted as string,
+                sorted_order: req.query.sorted_order as any
+            };
+
+            const result = await MatchesService.getMatchesByTenant(tenantId, query);
+
+            const response = ApiResponse.success(result, 'Matches retrieved successfully');
             res.status(response.status).json(response);
         } catch (error: any) {
             const errorResponse = ApiResponse.badRequest(error.message);

@@ -565,6 +565,84 @@ export const matchesPaths = {
             }
         }
     },
+    '/api/v1/matches/tenant': {
+        get: {
+            summary: 'Get tenant matches list (table data)',
+            description: 'Retrieves raw match table data for the authenticated tenant with pagination, filtering, and sorting.',
+            tags: ['Matches'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'page',
+                    in: 'query',
+                    schema: { type: 'integer', default: 1 },
+                    description: 'Page number'
+                },
+                {
+                    name: 'limit',
+                    in: 'query',
+                    schema: { type: 'integer', default: 10 },
+                    description: 'Items per page'
+                },
+                {
+                    name: 'status',
+                    in: 'query',
+                    schema: { type: 'string' },
+                    description: 'Filter by match status'
+                },
+                {
+                    name: 'sorted',
+                    in: 'query',
+                    schema: { type: 'string', default: 'createdAt' },
+                    description: 'Field to sort by'
+                },
+                {
+                    name: 'sorted_order',
+                    in: 'query',
+                    schema: { type: 'string', enum: ['ASC', 'DESC'], default: 'DESC' },
+                    description: 'Sort order'
+                }
+            ],
+            responses: {
+                200: {
+                    description: 'Paginated list of matches',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    status: { type: 'integer', example: 200 },
+                                    message: { type: 'string', example: 'Matches retrieved successfully' },
+                                    data: {
+                                        type: 'object',
+                                        properties: {
+                                            data: {
+                                                type: 'array',
+                                                items: { $ref: '#/components/schemas/Match' }
+                                            },
+                                            meta: {
+                                                type: 'object',
+                                                properties: {
+                                                    page: { type: 'integer' },
+                                                    limit: { type: 'integer' },
+                                                    total: { type: 'integer' },
+                                                    totalPages: { type: 'integer' },
+                                                    hasNextPage: { type: 'boolean' },
+                                                    hasPreviousPage: { type: 'boolean' }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                401: { description: 'Unauthorized' },
+                403: { description: 'Forbidden' }
+            }
+        }
+    },
     '/api/v1/matches': {
         post: {
             summary: 'Create a new match',
@@ -1337,10 +1415,10 @@ export const matchesPaths = {
             description: 'Records each ball delivery with runs, wickets, boundaries, and automatic cricket logic including striker rotation',
             tags: ['Matches'],
             security: [{ bearerAuth: [] }],
-            parameters: [{ 
-                name: 'id', 
-                in: 'path', 
-                required: true, 
+            parameters: [{
+                name: 'id',
+                in: 'path',
+                required: true,
                 schema: { type: 'string' },
                 description: 'Match ID'
             }],
@@ -1352,35 +1430,35 @@ export const matchesPaths = {
                             type: 'object',
                             required: ['ball_type', 'batsman_id', 'bowler_id'],
                             properties: {
-                                ball_type: { 
-                                    type: 'string', 
-                                    enum: ['NORMAL', 'WIDE', 'NO_BALL', 'BYE', 'LEG_BYE', 'DOT'], 
+                                ball_type: {
+                                    type: 'string',
+                                    enum: ['NORMAL', 'WIDE', 'NO_BALL', 'BYE', 'LEG_BYE', 'DOT'],
                                     example: 'NORMAL',
                                     description: 'Type of ball delivered'
                                 },
-                                runs: { 
-                                    type: 'integer', 
+                                runs: {
+                                    type: 'integer',
                                     minimum: 0,
                                     example: 4,
                                     description: 'Runs scored on this ball (0-6+)'
                                 },
-                                batsman_id: { 
-                                    type: 'integer', 
+                                batsman_id: {
+                                    type: 'integer',
                                     example: 101,
                                     description: 'ID of batsman facing the ball'
                                 },
-                                bowler_id: { 
-                                    type: 'integer', 
+                                bowler_id: {
+                                    type: 'integer',
                                     example: 201,
                                     description: 'ID of bowler delivering the ball'
                                 },
-                                is_wicket: { 
-                                    type: 'boolean', 
+                                is_wicket: {
+                                    type: 'boolean',
                                     example: false,
                                     description: 'Whether this ball resulted in a wicket'
                                 },
-                                wicket_type: { 
-                                    type: 'string', 
+                                wicket_type: {
+                                    type: 'string',
                                     enum: ['BOWLED', 'CAUGHT', 'LBW', 'RUN_OUT', 'STUMPED'],
                                     example: 'CAUGHT',
                                     description: 'Type of dismissal (required if is_wicket is true)'

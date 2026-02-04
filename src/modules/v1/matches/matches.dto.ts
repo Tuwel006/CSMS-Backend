@@ -77,3 +77,11 @@ export interface RecordBallDto {
     should_flip_striker?: boolean;
     is_over_complete?: boolean;
 }
+
+export interface GetMatchesQueryDto {
+    page?: number;
+    limit?: number;
+    status?: string;
+    sorted?: string;
+    sorted_order?: 'ASC' | 'DESC';
+}
