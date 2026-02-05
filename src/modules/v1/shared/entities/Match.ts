@@ -13,6 +13,7 @@ import {
 import { Team } from './Team';
 import { Tenant } from './Tenant';
 import { MatchInnings } from './MatchInnings';
+import { User } from './User';
 
 export enum MatchFormat {
   T20 = 'T20',
@@ -49,6 +50,9 @@ export class Match {
 
   @Column()
   tenant_id: number;
+
+  @Column()
+  user_id: number;
 
   @Column({ nullable: true })
   toss_winner_team_id: number;
@@ -101,6 +105,10 @@ export class Match {
   @ManyToOne(() => Tenant)
   @JoinColumn({ name: 'tenant_id' })
   tenant: Tenant;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
   @OneToMany(() => MatchInnings, innings => innings.match)
   innings: MatchInnings[];

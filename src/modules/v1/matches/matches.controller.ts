@@ -28,13 +28,19 @@ export class MatchesController {
     static async generateMatchToken(req: AuthRequest, res: Response) {
         try {
             const tenantId = req.user?.tenantId;
+            const user_id = req.user?.id;
 
             if (!tenantId) {
                 const response = ApiResponse.forbidden('Tenant ID is required');
                 return res.status(response.status).json(response);
             }
 
-            const match = await MatchesService.generateMatchToken(tenantId);
+            if (!user_id) {
+                const response = ApiResponse.forbidden('User ID is required');
+                return res.status(response.status).json(response);
+            }
+
+            const match = await MatchesService.generateMatchToken(tenantId, user_id);
             const response = ApiResponse.created(match, 'Match token generated successfully');
             res.status(response.status).json(response);
         } catch (error: any) {

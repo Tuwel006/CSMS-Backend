@@ -39,7 +39,7 @@ export class MatchesService {
         return newTeam.id;
     }
 
-    static async generateMatchToken(tenant_id: number) {
+    static async generateMatchToken(tenant_id: number, user_id: number) {
         const matchRepository = AppDataSource.getRepository(Match);
         const uniqueId = Math.floor(100000 + Math.random() * 900000);
         const matchToken = `CSMSMATCH${uniqueId}`;
@@ -47,6 +47,7 @@ export class MatchesService {
         const match = matchRepository.create({
             id: matchToken,
             tenant_id,
+            user_id,
             is_active: true
         });
 
@@ -102,7 +103,7 @@ export class MatchesService {
 
         const [matches, total] = await matchRepository.findAndCount({
             where,
-            relations: ['teamA', 'teamB', 'winner', 'tossWinner', 'battingFirst', 'currentInnings'],
+            relations: ['teamA', 'teamB', 'winner', 'tossWinner', 'battingFirst', 'currentInnings', 'user'],
             order: { [sorted]: (sorted_order as string).toUpperCase() as any },
             skip,
             take: Number(limit)
@@ -133,7 +134,7 @@ export class MatchesService {
 
         const [matches, total] = await matchRepository.findAndCount({
             where,
-            relations: ['teamA', 'teamB'],
+            relations: ['teamA', 'teamB', 'user'],
             order: { match_date: 'DESC', createdAt: 'DESC' },
             skip,
             take: limit
