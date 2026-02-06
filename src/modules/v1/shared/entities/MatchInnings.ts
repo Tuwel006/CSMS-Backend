@@ -51,14 +51,17 @@ export class MatchInnings {
   @Column({ default: false })
   is_completed: boolean;
 
-  @Column({ nullable: true })
-  striker_id: number;
+  @Column({ type: 'int', nullable: true })
+  striker_id: number | null;
 
-  @Column({ nullable: true })
-  non_striker_id: number;
+  @Column({ type: 'int', nullable: true })
+  non_striker_id: number | null;
 
-  @Column({ nullable: true })
-  current_bowler_id: number;
+  @Column({ type: 'int', nullable: true })
+  current_bowler_id: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  previous_bowler_id: number | null;
 
   @Column()
   tenant_id: number;

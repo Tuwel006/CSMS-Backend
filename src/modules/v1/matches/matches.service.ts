@@ -153,6 +153,7 @@ export class MatchesService {
                         matchId: match.id,
                         format: match.format,
                         status: match.status,
+                        currentInningsId: match.current_innings_id,
                         lastUpdated: match.updatedAt
                     },
                     teams: {
@@ -224,6 +225,7 @@ export class MatchesService {
                         matchId: match.id,
                         format: match.format,
                         status: match.status,
+                        currentInningsId: match.current_innings_id,
                         lastUpdated: match.updatedAt,
                         tenantId: match.tenant_id
                     },
@@ -336,6 +338,7 @@ export class MatchesService {
             format: match.format,
             venue: match.venue,
             status: match.status,
+            current_innings_id: match.current_innings_id,
             umpire_1: match.umpire_1,
             umpire_2: match.umpire_2,
             ...(match.toss_winner_team_id && { toss_winner_team_id: match.toss_winner_team_id }),
@@ -584,7 +587,7 @@ export class MatchesService {
                     currentOver: {
                         o: inning.current_over,
                         isOverComplete,
-                        bowlerId: currentBowler?.player.id || null,
+                        bowlerId: inning.current_bowler_id,
                         ballsCount: currentOverBalls.length,
                         illegalBallsCount: currentOverBalls.filter(ball =>
                             ['WIDE', 'NO_BALL'].includes(ball.ball_type)
@@ -607,6 +610,7 @@ export class MatchesService {
                     matchId: match.id,
                     format: match.format,
                     status: match.status,
+                    currentInningsId: match.current_innings_id,
                     lastUpdated: match.updatedAt
                 },
                 teams: {
@@ -756,7 +760,7 @@ export class MatchesService {
                     currentOver: {
                         o: inning.current_over,
                         isOverComplete,
-                        bowlerId: currentBowler?.player.id || null,
+                        bowlerId: inning.current_bowler_id,
                         ballsCount: currentOverBalls.length,
                         illegalBallsCount: currentOverBalls.filter(ball =>
                             ['WIDE', 'NO_BALL'].includes(ball.ball_type)
@@ -779,6 +783,7 @@ export class MatchesService {
                     matchId: match.id,
                     format: match.format,
                     status: match.status,
+                    currentInningsId: match.current_innings_id,
                     lastUpdated: match.updatedAt
                 },
                 teams: {
@@ -853,6 +858,10 @@ export class MatchesService {
                 throw new Error('Striker, Non-Striker or Bowler not set for the innings');
             }
 
+            if (innings.previous_bowler_id === bowlerId) {
+                throw new Error('Same bowler cannot bowl consecutive overs');
+            }
+
 
             // Calculate final values (innings becomes stale after updates)
             const totalRuns = innings.runs + runsToAdd;
@@ -879,7 +888,11 @@ export class MatchesService {
                     wickets: () => `wickets + ${is_wicket ? 1 : 0}`,
                     balls: () => `balls + ${ballsToAdd}`,
                     extras: () => `extras + ${by_runs + extraRuns}`,
-                    ...(isOverComplete && { current_over: () => 'current_over + 1' }),
+                    ...(isOverComplete && {
+                        current_over: () => 'current_over + 1',
+                        previous_bowler_id: bowlerId,
+                        current_bowler_id: null
+                    }),
                     ...(shouldFlipStrike && { striker_id: nonStrikerId, non_striker_id: strikerId })
                 }
             );
@@ -939,7 +952,8 @@ export class MatchesService {
             const currentOverBalls = await ballRepository.find({
                 where: {
                     innings_id: innings.id,
-                    over_number: isOverComplete ? innings.current_over + 1 : innings.current_over,
+                    over_number: innings.current_over,
+                    bowler_id: bowlerId,
                     tenant_id
                 },
                 order: { ball_number: 'ASC' }
@@ -1161,17 +1175,32 @@ export class MatchesService {
 
         const { player_id } = bowlerData;
 
+        // update match innings current bowler
+        const inningsRepository = AppDataSource.getRepository(MatchInnings);
+        const innings = await inningsRepository.findOne({
+            where: { id: match.current_innings_id, tenant_id }
+        });
+
+        if (!innings) {
+            throw { status: HTTP_STATUS.NOT_FOUND, message: 'Innings not found' };
+        }
+
+        if (innings.previous_bowler_id === player_id) {
+            throw { status: HTTP_STATUS.BAD_REQUEST, message: 'Same bowler cannot bowl consecutive overs' };
+        }
+
         // Set all bowlers as inactive first
         await bowlingRepository.update(
             { innings_id: match.current_innings_id, tenant_id },
             { is_current_bowler: false }
         );
 
-        // update match innings current bowler
-        const inningsRepository = AppDataSource.getRepository(MatchInnings);
         await inningsRepository.update(
             { id: match.current_innings_id, tenant_id },
-            { current_bowler_id: player_id }
+            {
+                current_bowler_id: player_id,
+                ...(innings.current_bowler_id && { previous_bowler_id: innings.current_bowler_id })
+            }
         );
 
         // Check if bowler already exists
@@ -1185,7 +1214,7 @@ export class MatchesService {
                 innings_id: match.current_innings_id,
                 player_id,
                 tenant_id
-            });
+            }); // needs to fix
         }
 
         bowler.is_current_bowler = true;

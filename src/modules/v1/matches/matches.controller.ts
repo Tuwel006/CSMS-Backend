@@ -291,7 +291,6 @@ export class MatchesController {
     static async getAvailableBatsmen(req: AuthRequest, res: Response) {
         try {
             const matchId = req.params.id;
-            const inningsNumber = parseInt(req.params.inningsNumber);
             const tenantId = req.user?.tenantId;
 
             if (!tenantId) {
@@ -299,7 +298,7 @@ export class MatchesController {
                 return res.status(response.status).json(response);
             }
 
-            const result = await MatchesService.getAvailableBatsmen(matchId, inningsNumber);
+            const result = await MatchesService.getAvailableBatsmen(matchId, tenantId);
             res.status(200).json(result);
         } catch (error: any) {
             const errorResponse = ApiResponse.badRequest(error.message);

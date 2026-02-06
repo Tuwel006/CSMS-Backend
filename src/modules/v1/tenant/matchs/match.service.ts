@@ -79,7 +79,7 @@ export class MatchService {
 
   static async getMatchesByTenant(tenantId: number, page = 1, limit = 10) {
     const matchRepository = AppDataSource.getRepository(Match);
-    
+
     const [matches, total] = await matchRepository.findAndCount({
       where: { tenant_id: tenantId },
       relations: ['teamA', 'teamB'],
@@ -104,11 +104,12 @@ export class MatchService {
       format: match.format,
       venue: match.venue,
       status: match.status,
+      currentInningsId: match.current_innings_id,
       isActive: match.is_active,
       createdAt: match.createdAt,
       updatedAt: match.updatedAt
     }));
-    
+
     const totalPages = Math.ceil(total / limit);
 
     return {
@@ -124,7 +125,7 @@ export class MatchService {
 
   static async getMatchById(matchId: string) {
     const matchRepository = AppDataSource.getRepository(Match);
-    
+
     const match = await matchRepository.findOne({
       where: { id: matchId },
       relations: ['teamA', 'teamB']
@@ -150,6 +151,7 @@ export class MatchService {
       format: match.format,
       venue: match.venue,
       status: match.status,
+      currentInningsId: match.current_innings_id,
       isActive: match.is_active,
       createdAt: match.createdAt,
       updatedAt: match.updatedAt
@@ -158,7 +160,7 @@ export class MatchService {
 
   static async updateMatch(matchId: string, tenantId: number, updateData: any) {
     const matchRepository = AppDataSource.getRepository(Match);
-    
+
     const match = await matchRepository.findOne({
       where: { id: matchId, tenant_id: tenantId }
     });
@@ -188,7 +190,7 @@ export class MatchService {
     try {
       const matchRepository = queryRunner.manager.getRepository(Match);
       const matchPlayerRepository = queryRunner.manager.getRepository(MatchPlayer);
-      
+
       const match = await matchRepository.findOne({
         where: { id: matchId, tenant_id: tenantId }
       });
