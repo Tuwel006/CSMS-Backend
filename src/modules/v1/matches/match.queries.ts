@@ -15,7 +15,7 @@ export class LiveScoreQuery {
         // 1. Get innings by id (with striker_id, non_striker_id)
         const innings = await inningsRepo.createQueryBuilder("inn")
             .where("inn.id = :inningsId AND inn.match_id = :matchId", { inningsId, matchId })
-            .select(["inn.id", "inn.runs", "inn.wickets", "inn.balls", "inn.current_over", "inn.striker_id", "inn.non_striker_id"])
+            .select(["inn.id", "inn.runs", "inn.wickets", "inn.balls", "inn.current_over", "inn.striker_id", "inn.non_striker_id", "inn.is_completed"])
             .getOne();
         if (!innings) throw { status: 404, message: "Innings not found" };
 
@@ -65,6 +65,7 @@ export class LiveScoreQuery {
 
         return {
             i: innings.id,
+            ic: innings.is_completed,
             r: innings.runs,
             w: innings.wickets,
             b: innings.balls,

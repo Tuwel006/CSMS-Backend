@@ -7,6 +7,7 @@ export interface LiveScorePayload {
   st: LiveBatsman;    // striker
   ns: LiveBatsman;    // non-striker
 
+  ic?: boolean;       // innings complete
   ov: OverBall[];     // current over balls
 }
 
@@ -20,8 +21,8 @@ export interface LiveBatsman {
 }
 
 export type OverBall = {
-    type: string;   // type of ball
-    r: number;      // runs scored on the ball
+  type: string;   // type of ball
+  r: number;      // runs scored on the ball
 };
 
 export interface LiveBowler {

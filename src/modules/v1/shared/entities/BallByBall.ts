@@ -13,7 +13,7 @@ import { Match } from './Match';
 import { Team } from './Team';
 
 @Entity('ball_by_ball')
-@Index("idx_ball_innings_over", ["innings_id", "over_number"])
+@Index("idx_ball_innings_over", ["innings_id", "over_number", "bowler_id", "ball_number", "tenant_id"])
 export class BallByBall {
   @PrimaryGeneratedColumn()
   id: number;
@@ -30,10 +30,10 @@ export class BallByBall {
   // @Column()
   // bowling_team_id: number;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   over_number: number;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   ball_number: number;
 
   @Column()
