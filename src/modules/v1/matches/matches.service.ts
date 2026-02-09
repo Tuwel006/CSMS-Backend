@@ -733,8 +733,8 @@ export class MatchesService {
             const bowlers = bowlersByInnings.get(inning.id) || [];
             const balls = ballsByInnings.get(inning.id) || [];
 
-            const striker = batsmen.find(b => b.is_striker && !b.is_out);
-            const nonStriker = batsmen.find(b => !b.is_striker && !b.is_out);
+            const striker = batsmen.find(b => b.player_id === inning.striker_id && !b.is_out);
+            const nonStriker = batsmen.find(b => b.player_id === inning.non_striker_id && !b.is_out);
 
             const dismissed = batsmen
                 .filter(b => b.is_out)
@@ -765,7 +765,7 @@ export class MatchesService {
             const isOverComplete = inning.balls % 6 === 0 && inning.balls > 0;
 
             return {
-                i: inning.innings_number,
+                i: inning.id,
                 battingTeam: inning.battingTeam.short_name,
                 bowlingTeam: inning.bowlingTeam.short_name,
 
@@ -944,6 +944,7 @@ export class MatchesService {
                     ...(shouldFlipStrike && { striker_id: nonStrikerId, non_striker_id: strikerId })
                 }
             );
+            console.log("Out check: ", is_wicket, wicket, wicket?.out_batsman_id, strikerId)
 
             // 2. Update batsman (atomic SQL)
             await battingRepository.update(
@@ -953,7 +954,7 @@ export class MatchesService {
                     balls: () => `balls + ${ballsToAdd}`,
                     ...(is_boundary && runs === 4 && { fours: () => 'fours + 1' }),
                     ...(is_boundary && runs === 6 && { sixes: () => 'sixes + 1' }),
-                    ...(is_wicket && {
+                    ...(is_wicket && wicket?.out_batsman_id === strikerId && {
                         is_out: true,
                         ...(wicket?.wicket_type && { wicket_type: wicket.wicket_type }),
                         ...(wicket?.bowler_id && { bowler_id: wicket.bowler_id }),
@@ -961,6 +962,18 @@ export class MatchesService {
                     })
                 }
             );
+
+            if (is_wicket && wicket && wicket?.out_batsman_id !== strikerId) {
+                await battingRepository.update(
+                    { innings_id, player_id: nonStrikerId, tenant_id },
+                    {
+                        is_out: true,
+                        ...(wicket?.wicket_type && { wicket_type: wicket.wicket_type }),
+                        ...(wicket?.bowler_id && { bowler_id: wicket.bowler_id }),
+                        ...(wicket?.fielder_id && { fielder_id: wicket.fielder_id })
+                    }
+                );
+            }
 
             // 3. Update bowler (atomic SQL)
             await bowlingRepository.update(
@@ -1154,7 +1167,7 @@ export class MatchesService {
             throw { status: HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
         }
 
-        const { player_id, is_striker, ret_hurt } = batsmanData;
+        const { player_id, is_striker = true, ret_hurt } = batsmanData;
 
         // If setting ret_hurt, update existing batsman
         if (ret_hurt) {
@@ -1203,8 +1216,8 @@ export class MatchesService {
         await inningsRepository.update(
             { id: match.current_innings_id, tenant_id },
             newBatsmanIsStriker
-                ? { striker_id: batsman.id }
-                : { non_striker_id: batsman.id }
+                ? { striker_id: batsman.player_id }
+                : { non_striker_id: batsman.player_id }
         );
 
         return { success: true, message: 'Batsman set successfully' };

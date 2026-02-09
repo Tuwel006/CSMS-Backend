@@ -68,6 +68,7 @@ export interface RecordBallDto {
         wicket_type?: string;
         bowler_id?: number;
         fielder_id?: number;
+        out_batsman_id?: number;
     };
     innings_id: number;
     batting_team_id: number;
