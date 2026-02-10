@@ -5,13 +5,14 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "dev:local": "cross-env NODE_ENV=development DOTENV_CONFIG_PATH=.env.local ts-node-dev --respawn --transpile-only -r dotenv/config src/server.ts",
-    "start:stg": "cross-env NODE_ENV=staging DOTENV_CONFIG_PATH=.env.staging ts-node-dev --respawn --transpile-only -r dotenv/config src/server.ts",
+    "start:stg": "cross-env NODE_ENV=staging DOTENV_CONFIG_PATH=.env.stg ts-node-dev --respawn --transpile-only -r dotenv/config src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "ts-node src/seeders/index.ts",
     "seed:local": "cross-env NODE_ENV=development DOTENV_CONFIG_PATH=.env.local ts-node -r dotenv/config src/seeders/index.ts dotenv_config_path=.env.local",
-    "seed:stg": "cross-env NODE_ENV=staging DOTENV_CONFIG_PATH=.env.staging ts-node -r dotenv/config src/seeders/index.ts",
+    "seed:stg": "cross-env NODE_ENV=staging DOTENV_CONFIG_PATH=.env.stg ts-node -r dotenv/config src/seeders/index.ts",
     "db:reset": "cross-env NODE_ENV=development DOTENV_CONFIG_PATH=.env.local ts-node -r dotenv/config src/scripts/reset-database.ts",
+    "db:reset:stg": "cross-env NODE_ENV=staging DOTENV_CONFIG_PATH=.env.stg ts-node -r dotenv/config src/scripts/reset-database.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
