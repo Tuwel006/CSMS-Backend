@@ -65,17 +65,21 @@ __decorate([
     __metadata("design:type", Boolean)
 ], MatchInnings.prototype, "is_completed", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", Number)
+    (0, typeorm_1.Column)({ type: 'int', nullable: true }),
+    __metadata("design:type", Object)
 ], MatchInnings.prototype, "striker_id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", Number)
+    (0, typeorm_1.Column)({ type: 'int', nullable: true }),
+    __metadata("design:type", Object)
 ], MatchInnings.prototype, "non_striker_id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", Number)
+    (0, typeorm_1.Column)({ type: 'int', nullable: true }),
+    __metadata("design:type", Object)
 ], MatchInnings.prototype, "current_bowler_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', nullable: true }),
+    __metadata("design:type", Object)
+], MatchInnings.prototype, "previous_bowler_id", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
@@ -104,5 +108,7 @@ __decorate([
     __metadata("design:type", Date)
 ], MatchInnings.prototype, "updatedAt", void 0);
 exports.MatchInnings = MatchInnings = __decorate([
-    (0, typeorm_1.Entity)('match_innings')
+    (0, typeorm_1.Entity)('match_innings'),
+    (0, typeorm_1.Index)("idx_match_innings_id_tenant", ["id", "tenant_id"]),
+    (0, typeorm_1.Index)("idx_match_innings_match", ["match_id", "tenant_id"])
 ], MatchInnings);

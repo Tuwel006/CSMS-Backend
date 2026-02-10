@@ -14,6 +14,7 @@ const typeorm_1 = require("typeorm");
 const Team_1 = require("./Team");
 const Tenant_1 = require("./Tenant");
 const MatchInnings_1 = require("./MatchInnings");
+const User_1 = require("./User");
 var MatchFormat;
 (function (MatchFormat) {
     MatchFormat["T20"] = "T20";
@@ -52,13 +53,29 @@ __decorate([
     __metadata("design:type", String)
 ], Match.prototype, "status", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Boolean)
+], Match.prototype, "is_completed", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Match.prototype, "match_type", void 0);
+__decorate([
     (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
 ], Match.prototype, "is_active", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], Match.prototype, "playing_count", void 0);
+__decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
 ], Match.prototype, "tenant_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], Match.prototype, "user_id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", Number)
@@ -89,8 +106,12 @@ __decorate([
 ], Match.prototype, "umpire_2", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", Number)
+    __metadata("design:type", Object)
 ], Match.prototype, "current_innings_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 2 }),
+    __metadata("design:type", Number)
+], Match.prototype, "no_of_innings", void 0);
 __decorate([
     (0, typeorm_1.OneToOne)(() => MatchInnings_1.MatchInnings),
     (0, typeorm_1.JoinColumn)({ name: 'current_innings_id' }),
@@ -127,6 +148,11 @@ __decorate([
     __metadata("design:type", Tenant_1.Tenant)
 ], Match.prototype, "tenant", void 0);
 __decorate([
+    (0, typeorm_1.ManyToOne)(() => User_1.User),
+    (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
+    __metadata("design:type", User_1.User)
+], Match.prototype, "user", void 0);
+__decorate([
     (0, typeorm_1.OneToMany)(() => MatchInnings_1.MatchInnings, innings => innings.match),
     __metadata("design:type", Array)
 ], Match.prototype, "innings", void 0);
@@ -139,5 +165,6 @@ __decorate([
     __metadata("design:type", Date)
 ], Match.prototype, "updatedAt", void 0);
 exports.Match = Match = __decorate([
-    (0, typeorm_1.Entity)('matches')
+    (0, typeorm_1.Entity)('matches'),
+    (0, typeorm_1.Index)("idx_match_current_innings", ["id", "tenant_id", "current_innings_id"])
 ], Match);

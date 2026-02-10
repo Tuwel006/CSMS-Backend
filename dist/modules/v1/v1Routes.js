@@ -11,6 +11,7 @@ const teams_1 = require("./teams");
 const players_1 = require("./players");
 const matches_1 = require("./matches");
 const auth_middleware_1 = require("./shared/middlewares/auth.middleware");
+const sse_1 = __importDefault(require("./sse"));
 const router = (0, express_1.Router)();
 // User routes
 router.use('/user/auth', user_1.userAuthRoutes);
@@ -25,4 +26,6 @@ router.use('/teams', auth_middleware_1.authMiddleware, teams_1.teamRoutes);
 router.use('/players', auth_middleware_1.authMiddleware, players_1.playerRoutes);
 // Matches routes (auth handled in matches.routes.ts)
 router.use('/matches', matches_1.matchesRoutes);
+//sse routes
+router.use('/sse', sse_1.default);
 exports.default = router;

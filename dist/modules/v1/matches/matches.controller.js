@@ -24,12 +24,40 @@ class MatchesController {
     static async generateMatchToken(req, res) {
         try {
             const tenantId = req.user?.tenantId;
+            const user_id = req.user?.id;
             if (!tenantId) {
                 const response = ApiResponse_1.ApiResponse.forbidden('Tenant ID is required');
                 return res.status(response.status).json(response);
             }
-            const match = await matches_service_1.MatchesService.generateMatchToken(tenantId);
+            if (!user_id) {
+                const response = ApiResponse_1.ApiResponse.forbidden('User ID is required');
+                return res.status(response.status).json(response);
+            }
+            const match = await matches_service_1.MatchesService.generateMatchToken(tenantId, user_id);
             const response = ApiResponse_1.ApiResponse.created(match, 'Match token generated successfully');
+            res.status(response.status).json(response);
+        }
+        catch (error) {
+            const errorResponse = ApiResponse_1.ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+    static async getMatchesByTenant(req, res) {
+        try {
+            const tenantId = req.user?.tenantId;
+            if (!tenantId) {
+                const response = ApiResponse_1.ApiResponse.forbidden('Tenant ID is required');
+                return res.status(response.status).json(response);
+            }
+            const query = {
+                page: req.query.page ? parseInt(req.query.page) : undefined,
+                limit: req.query.limit ? parseInt(req.query.limit) : undefined,
+                status: req.query.status,
+                sorted: req.query.sorted,
+                sorted_order: req.query.sorted_order
+            };
+            const result = await matches_service_1.MatchesService.getMatchesByTenant(tenantId, query);
+            const response = ApiResponse_1.ApiResponse.success(result, 'Matches retrieved successfully');
             res.status(response.status).json(response);
         }
         catch (error) {
@@ -224,13 +252,12 @@ class MatchesController {
     static async getAvailableBatsmen(req, res) {
         try {
             const matchId = req.params.id;
-            const inningsNumber = parseInt(req.params.inningsNumber);
             const tenantId = req.user?.tenantId;
             if (!tenantId) {
                 const response = ApiResponse_1.ApiResponse.forbidden('Tenant ID is required');
                 return res.status(response.status).json(response);
             }
-            const result = await matches_service_1.MatchesService.getAvailableBatsmen(matchId, inningsNumber, tenantId);
+            const result = await matches_service_1.MatchesService.getAvailableBatsmen(matchId, tenantId);
             res.status(200).json(result);
         }
         catch (error) {
@@ -247,7 +274,7 @@ class MatchesController {
                 const response = ApiResponse_1.ApiResponse.forbidden('Tenant ID is required');
                 return res.status(response.status).json(response);
             }
-            const result = await matches_service_1.MatchesService.getBowlingTeamPlayers(matchId, inningsNumber, tenantId);
+            const result = await matches_service_1.MatchesService.getBowlingTeamPlayers(matchId, tenantId);
             res.status(200).json(result);
         }
         catch (error) {

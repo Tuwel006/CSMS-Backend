@@ -876,7 +876,7 @@ export class MatchesService {
                 select: ["id", "current_innings_id", "playing_count", "format", "no_of_innings"]
             });
 
-            if (!match?.current_innings_id) {
+            if (match?.current_innings_id === null || match?.current_innings_id === undefined) {
                 throw new Error("No active innings");
             }
 
@@ -1041,7 +1041,7 @@ export class MatchesService {
                 await matchRepo.update(
                     { id: match.id, tenant_id },
                     {
-                        current_innings_id: undefined
+                        current_innings_id: null
                     }
                 );
                 if (match.no_of_innings === innings.innings_number) {
@@ -1125,6 +1125,10 @@ export class MatchesService {
         const battingRepository = AppDataSource.getRepository(InningsBatting);
         const inningsRepository = AppDataSource.getRepository(MatchInnings);
 
+        if (!match.current_innings_id) {
+            throw { status: HTTP_STATUS.BAD_REQUEST, message: 'No active innings for this match' };
+        }
+
         const innings = await inningsRepository.findOne({
             where: { id: match.current_innings_id }
         });
@@ -1170,6 +1174,10 @@ export class MatchesService {
             throw { status: HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
         }
 
+        if (!match.current_innings_id) {
+            throw { status: HTTP_STATUS.BAD_REQUEST, message: 'No active innings for this match' };
+        }
+
         const innings = await inningsRepository.findOne({
             where: { match_id: matchId, id: match.current_innings_id, tenant_id }
         });
@@ -1206,6 +1214,10 @@ export class MatchesService {
         }
 
         const { player_id, is_striker = true, ret_hurt } = batsmanData;
+
+        if (!match.current_innings_id) {
+            throw { status: HTTP_STATUS.BAD_REQUEST, message: 'No active innings for this match' };
+        }
 
         // If setting ret_hurt, update existing batsman
         if (ret_hurt) {
@@ -1269,6 +1281,10 @@ export class MatchesService {
 
         const { player_id } = bowlerData;
 
+        if (!match.current_innings_id) {
+            throw { status: HTTP_STATUS.BAD_REQUEST, message: 'No active innings for this match' };
+        }
+
         // update match innings current bowler
         const inningsRepository = AppDataSource.getRepository(MatchInnings);
         const innings = await inningsRepository.findOne({
@@ -1303,6 +1319,10 @@ export class MatchesService {
         });
 
         if (!bowler) {
+            if (!match.current_innings_id) {
+                throw { status: HTTP_STATUS.BAD_REQUEST, message: 'No active innings for this match' };
+            }
+
             // Create new bowler entry
             bowler = bowlingRepository.create({
                 innings_id: match.current_innings_id,

@@ -95,6 +95,7 @@ class MatchService {
             format: match.format,
             venue: match.venue,
             status: match.status,
+            currentInningsId: match.current_innings_id,
             isActive: match.is_active,
             createdAt: match.createdAt,
             updatedAt: match.updatedAt
@@ -135,6 +136,7 @@ class MatchService {
             format: match.format,
             venue: match.venue,
             status: match.status,
+            currentInningsId: match.current_innings_id,
             isActive: match.is_active,
             createdAt: match.createdAt,
             updatedAt: match.updatedAt

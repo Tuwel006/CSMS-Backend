@@ -385,6 +385,40 @@ const options = {
                         createdAt: { type: 'string', format: 'date-time' },
                         updatedAt: { type: 'string', format: 'date-time' }
                     }
+                },
+                Team: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'integer' },
+                        name: { type: 'string' },
+                        short_name: { type: 'string' },
+                        logo_url: { type: 'string', nullable: true },
+                        location: { type: 'string', nullable: true },
+                        createdAt: { type: 'string', format: 'date-time' },
+                        updatedAt: { type: 'string', format: 'date-time' }
+                    }
+                },
+                Match: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'string' },
+                        team_a_id: { type: 'integer' },
+                        team_b_id: { type: 'integer' },
+                        match_date: { type: 'string', format: 'date-time' },
+                        format: { type: 'string' },
+                        venue: { type: 'string' },
+                        status: { type: 'string' },
+                        is_active: { type: 'boolean' },
+                        tenant_id: { type: 'integer' },
+                        toss_winner_team_id: { type: 'integer', nullable: true },
+                        batting_first_team_id: { type: 'integer', nullable: true },
+                        winner_team_id: { type: 'integer', nullable: true },
+                        result_description: { type: 'string', nullable: true },
+                        createdAt: { type: 'string', format: 'date-time' },
+                        updatedAt: { type: 'string', format: 'date-time' },
+                        teamA: { $ref: '#/components/schemas/Team' },
+                        teamB: { $ref: '#/components/schemas/Team' }
+                    }
                 }
             }
         },

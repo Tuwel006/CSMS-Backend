@@ -85,7 +85,7 @@ export class Match {
   umpire_2: string;
 
   @Column({ nullable: true })
-  current_innings_id: number;
+  current_innings_id: number | null;
 
   @Column({ default: 2 })
   no_of_innings: number;

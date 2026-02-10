@@ -18,9 +18,9 @@ router.delete('/team-setup/:matchId/:teamId', team_setup_controller_1.TeamSetupC
 router.post('/generate-token', matches_controller_1.MatchesController.generateMatchToken);
 router.delete('/delete-token/:id', matches_controller_1.MatchesController.deleteMatchToken);
 router.get('/current/:id', matches_controller_1.MatchesController.getCurrentCreatedMatch);
-router.get('/:id/score', matches_controller_1.MatchesController.getMatchScore);
-router.get('/:id/innings/:inningsNumber/available-batsmen', matches_controller_1.MatchesController.getAvailableBatsmen);
-router.get('/:id/innings/:inningsNumber/bowling-team', matches_controller_1.MatchesController.getBowlingTeamPlayers);
+router.get('/:id/score', matches_controller_1.MatchesController.getPublicMatchScore);
+router.get('/:id/available-batsmen', matches_controller_1.MatchesController.getAvailableBatsmen);
+router.get('/:id/bowling-team', matches_controller_1.MatchesController.getBowlingTeamPlayers);
 router.post('/:id/set-batsman', matches_controller_1.MatchesController.setBatsman);
 router.post('/:id/set-bowler', matches_controller_1.MatchesController.setBowler);
 router.post('/:id/record-ball', matches_controller_1.MatchesController.recordBall);
@@ -28,6 +28,7 @@ router.patch('/:id/complete', matches_controller_1.MatchesController.completeMat
 router.patch('/schedule/:id', matches_controller_1.MatchesController.scheduleMatch);
 router.patch('/start/:id', matches_controller_1.MatchesController.startMatch);
 router.post('/', matches_controller_1.MatchesController.createMatch);
+router.get('/tenant', matches_controller_1.MatchesController.getMatchesByTenant);
 router.get('/', matches_controller_1.MatchesController.getMatches);
 router.get('/:id', matches_controller_1.MatchesController.getMatchById);
 router.patch('/:id', matches_controller_1.MatchesController.updateMatch);
