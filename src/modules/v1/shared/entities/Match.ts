@@ -48,6 +48,9 @@ export class Match {
   @Column({ default: true })
   is_active: boolean;
 
+  @Column({ nullable: true })
+  playing_count: number;
+
   @Column()
   tenant_id: number;
 

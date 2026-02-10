@@ -417,6 +417,7 @@ export class MatchesService {
             match.format = startData.over.toString();
             match.status = 'LIVE';
             match.current_innings_id = firstInnings.id;
+            match.playing_count = startData.teamA.playing_11_id.length || startData.teamB.playing_11_id.length || 11;
             await matchRepository.save(match);
 
             // Update playing 11 for both teams
@@ -928,23 +929,7 @@ export class MatchesService {
             // Strike rotation: odd runs OR end of over (legal ball only)
             const shouldFlipStrike = runsBetweenWickets % 2 === 1 || (isOverComplete && isLegalBall);
 
-            // 1. Update innings (atomic SQL)
-            await inningsRepository.update(
-                { id: innings_id, tenant_id },
-                {
-                    runs: () => `runs + ${runsToAdd}`,
-                    wickets: () => `wickets + ${is_wicket ? 1 : 0}`,
-                    balls: () => `balls + ${ballsToAdd}`,
-                    extras: () => `extras + ${by_runs + extraRuns}`,
-                    ...(isOverComplete && {
-                        current_over: () => 'current_over + 1',
-                        previous_bowler_id: bowlerId,
-                        current_bowler_id: null
-                    }),
-                    ...(shouldFlipStrike && { striker_id: nonStrikerId, non_striker_id: strikerId })
-                }
-            );
-            console.log("Out check: ", is_wicket, wicket, wicket?.out_batsman_id, strikerId)
+
 
             // 2. Update batsman (atomic SQL)
             await battingRepository.update(
@@ -1019,6 +1004,39 @@ export class MatchesService {
                 },
                 order: { ball_number: 'ASC' }
             });
+
+            let innings_over = false;
+            if (is_wicket && wicket) {
+                if (innings.wickets === match.playing_count - 1) {
+                    innings_over = true;
+                }
+            }
+            if (innings.balls === Number(match.format) * 6) {
+                innings_over = true;
+            }
+
+            // 1. Update innings (atomic SQL)
+            await inningsRepository.update(
+                { id: innings_id, tenant_id },
+                {
+                    runs: () => `runs + ${runsToAdd}`,
+                    wickets: () => `wickets + ${is_wicket ? 1 : 0}`,
+                    balls: () => `balls + ${ballsToAdd}`,
+                    extras: () => `extras + ${by_runs + extraRuns}`,
+                    ...(isOverComplete && {
+                        current_over: () => 'current_over + 1',
+                        previous_bowler_id: bowlerId,
+                        current_bowler_id: null
+                    }),
+                    ...(shouldFlipStrike && { striker_id: nonStrikerId, non_striker_id: strikerId }),
+                    ...(is_wicket && wicket?.out_batsman_id === strikerId && { striker_id: null }),
+                    ...(is_wicket && wicket?.out_batsman_id === nonStrikerId && { non_striker_id: null }),
+                    ...(innings_over && {
+                        is_completed: true,
+                    })
+                }
+            );
+
 
             const illegalBallsCount = currentOverBalls.filter(ball =>
                 ['WIDE', 'NO_BALL'].includes(ball.ball_type)
@@ -1184,30 +1202,27 @@ export class MatchesService {
         }
 
         // Check current batsmen (not out and not retired hurt)
-        const currentBatsmen = await battingRepository.find({
-            where: { innings_id: match.current_innings_id, tenant_id, is_out: false, ret_hurt: false }
+        // const currentBatsmen = await battingRepository.find({
+        //     where: { innings_id: match.current_innings_id, tenant_id, is_out: false, ret_hurt: false }
+        // });
+
+        const innings = await inningsRepository.findOne({
+            where: { id: match.current_innings_id, tenant_id }
         });
 
-        // Only allow adding if less than 2 current batsmen
-        if (currentBatsmen.length >= 2) {
-            throw { status: 400, message: 'Cannot add batsman. Two batsmen are already at the crease.' };
+        if (!innings) {
+            throw { status: HTTP_STATUS.NOT_FOUND, message: 'Innings not found' };
         }
 
-        // Determine striker status automatically
-        let newBatsmanIsStriker = is_striker || false;
-
-        if (currentBatsmen.length === 1) {
-            // If one batsman exists and is striker, new batsman becomes non-striker
-            // If one batsman exists and is non-striker, new batsman becomes striker
-            const existingBatsman = currentBatsmen[0];
-            newBatsmanIsStriker = !existingBatsman.is_striker;
+        if (innings.striker_id && innings.non_striker_id) {
+            throw { status: HTTP_STATUS.BAD_REQUEST, message: 'Two batsmen are already at the crease.' };
         }
 
         // Add new batsman
         const batsman = battingRepository.create({
             innings_id: match.current_innings_id,
             player_id,
-            is_striker: newBatsmanIsStriker,
+            is_striker: innings.striker_id ? false : true,
             ret_hurt: false,
             tenant_id
         });
@@ -1215,9 +1230,7 @@ export class MatchesService {
         await battingRepository.save(batsman);
         await inningsRepository.update(
             { id: match.current_innings_id, tenant_id },
-            newBatsmanIsStriker
-                ? { striker_id: batsman.player_id }
-                : { non_striker_id: batsman.player_id }
+            innings.striker_id ? { non_striker_id: batsman.player_id } : { striker_id: batsman.player_id }
         );
 
         return { success: true, message: 'Batsman set successfully' };
