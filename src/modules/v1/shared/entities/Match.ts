@@ -45,6 +45,12 @@ export class Match {
   @Column({ nullable: true })
   status: string;
 
+  @Column({ nullable: true })
+  is_completed: boolean;
+
+  @Column({ nullable: true })
+  match_type: string;
+
   @Column({ default: true })
   is_active: boolean;
 
@@ -80,6 +86,9 @@ export class Match {
 
   @Column({ nullable: true })
   current_innings_id: number;
+
+  @Column({ default: 2 })
+  no_of_innings: number;
 
   @OneToOne(() => MatchInnings)
   @JoinColumn({ name: 'current_innings_id' })

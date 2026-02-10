@@ -767,6 +767,8 @@ export class MatchesService {
 
             return {
                 i: inning.id,
+                is_completed: inning.is_completed,
+                innings_number: inning.innings_number,
                 battingTeam: inning.battingTeam.short_name,
                 bowlingTeam: inning.bowlingTeam.short_name,
 
@@ -871,7 +873,7 @@ export class MatchesService {
 
             const match = await matchRepo.findOne({
                 where: { id: matchId, tenant_id },
-                select: ["current_innings_id"]
+                select: ["id", "current_innings_id", "playing_count", "format", "no_of_innings"]
             });
 
             if (!match?.current_innings_id) {
@@ -1006,12 +1008,10 @@ export class MatchesService {
             });
 
             let innings_over = false;
-            if (is_wicket && wicket) {
-                if (innings.wickets === match.playing_count - 1) {
-                    innings_over = true;
-                }
+            if (totalWickets === (match.playing_count || 11) - 1) {
+                innings_over = true;
             }
-            if (innings.balls === Number(match.format) * 6) {
+            if (totalBalls === Number(match.format) * 6) {
                 innings_over = true;
             }
 
@@ -1037,6 +1037,25 @@ export class MatchesService {
                 }
             );
 
+            if (innings_over) {
+                await matchRepo.update(
+                    { id: match.id, tenant_id },
+                    {
+                        current_innings_id: undefined
+                    }
+                );
+                if (match.no_of_innings === innings.innings_number) {
+                    await matchRepo.update(
+                        { id: match.id, tenant_id },
+                        {
+                            is_completed: true,
+                            winner_team_id: innings.bowling_team_id,
+                            status: 'COMPLETED'
+                        }
+                    );
+                }
+            }
+
 
             const illegalBallsCount = currentOverBalls.filter(ball =>
                 ['WIDE', 'NO_BALL'].includes(ball.ball_type)
@@ -1056,6 +1075,7 @@ export class MatchesService {
             // Return UI-friendly response with computed final values
             return {
                 innings: innings_id,
+                is_innings_over: innings_over,
                 totalRuns,
                 totalWickets,
                 totalBalls,
