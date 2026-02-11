@@ -18,7 +18,31 @@ export async function scoreSSEHandler(req: Request, res: Response) {
 
     res.flushHeaders();
 
-    const snapshot = await redisService.getScore(matchId);
+    let snapshot = null;
+    try {
+        snapshot = await redisService.getScore(matchId);
+    } catch (err: any) {
+        console.error('Redis fetch failed, falling back to DB:', err.message);
+    }
+
+    // Fallback to DB if Redis fails or snapshot is missing
+    if (!snapshot) {
+        try {
+            const matchRepo = AppDataSource.getRepository(Match);
+            const match = await matchRepo.findOne({
+                where: { id: matchId },
+                select: ["current_innings_id"]
+            });
+
+            if (match?.current_innings_id) {
+                const { LiveScoreQuery } = await import('../modules/v1/matches/match.queries');
+                snapshot = await LiveScoreQuery.build(matchId, match.current_innings_id);
+            }
+        } catch (dbErr: any) {
+            console.error('DB fallback failed:', dbErr.message);
+        }
+    }
+
     if (snapshot) {
         const payload = `event: score\ndata: ${JSON.stringify(snapshot)}\n\n`;
         res.write(payload);
