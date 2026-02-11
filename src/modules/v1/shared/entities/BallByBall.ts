@@ -13,7 +13,7 @@ import { Match } from './Match';
 import { Team } from './Team';
 
 @Entity('ball_by_ball')
-@Index("idx_ball_innings_over", ["innings_id", "over_number", "bowler_id", "ball_number", "tenant_id"])
+@Index("idx_ball_innings_lookup", ["innings_id", "tenant_id", "over_number", "ball_number"])
 export class BallByBall {
   @PrimaryGeneratedColumn()
   id: number;

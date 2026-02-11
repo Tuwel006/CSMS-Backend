@@ -8,6 +8,8 @@ const router = Router();
 // Public routes (no authentication required)
 router.get('/all', MatchesController.getAllMatches);
 router.get('/get-score/:id', MatchesController.getPublicMatchScore);
+router.get('/:id/score', MatchesController.getPublicMatchScore);
+
 
 // Apply auth middleware to all routes below
 router.use(authMiddleware);
@@ -19,7 +21,6 @@ router.delete('/team-setup/:matchId/:teamId', TeamSetupController.deleteTeamSetu
 router.post('/generate-token', MatchesController.generateMatchToken);
 router.delete('/delete-token/:id', MatchesController.deleteMatchToken);
 router.get('/current/:id', MatchesController.getCurrentCreatedMatch);
-router.get('/:id/score', MatchesController.getPublicMatchScore);
 router.get('/:id/available-batsmen', MatchesController.getAvailableBatsmen);
 router.get('/:id/bowling-team', MatchesController.getBowlingTeamPlayers);
 router.post('/:id/set-batsman', MatchesController.setBatsman);

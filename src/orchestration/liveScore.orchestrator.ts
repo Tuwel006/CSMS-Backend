@@ -9,7 +9,7 @@ export class LiveScoreService {
     static async scoreEventService(matchId: string, inningsId: number): Promise<void> {
         const payload = await LiveScoreQuery.build(matchId, inningsId);
         console.log("🚀 Debug - LiveScoreService - scoreEventService - payload:", payload);
-        redisService.setScore({ matchId, inningsId, payload });
+        redisService.setScore({ matchId, payload });
         sseManager.broadcast(matchId, "score", payload);
     }
 }

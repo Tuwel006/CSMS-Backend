@@ -23,7 +23,7 @@ class SSEManager {
         }
     }
     broadcast(matchId, event, data) {
-        const payload = `event: ${event} \ndata: ${JSON.stringify(data)}\n\n`;
+        const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
         if (this.clients.has(matchId)) {
             this.clients.get(matchId).forEach(res => {
                 res.write(payload);

@@ -4,71 +4,117 @@ exports.LiveScoreQuery = void 0;
 const db_1 = require("../../../config/db");
 const BallByBall_1 = require("../shared/entities/BallByBall");
 const InningsBatting_1 = require("../shared/entities/InningsBatting");
+const InningsBowling_1 = require("../shared/entities/InningsBowling");
 const MatchInnings_1 = require("../shared/entities/MatchInnings");
 class LiveScoreQuery {
-    // need to be fixed after adding cuurent bowler id, striker id, non striker id and current innings id so that depended of current innings
     static async build(matchId, inningsId) {
-        // Use one-to-one relation for striker/non-striker, fetch by inningsId
         const inningsRepo = db_1.AppDataSource.getRepository(MatchInnings_1.MatchInnings);
         const battingRepo = db_1.AppDataSource.getRepository(InningsBatting_1.InningsBatting);
+        const bowlingRepo = db_1.AppDataSource.getRepository(InningsBowling_1.InningsBowling);
         const ballRepo = db_1.AppDataSource.getRepository(BallByBall_1.BallByBall);
-        // 1. Get innings by id (with striker_id, non_striker_id)
-        const innings = await inningsRepo.createQueryBuilder("inn")
-            .where("inn.id = :inningsId AND inn.match_id = :matchId", { inningsId, matchId })
-            .select(["inn.id", "inn.runs", "inn.wickets", "inn.balls", "inn.current_over", "inn.striker_id", "inn.non_striker_id", "inn.is_completed"])
-            .getOne();
-        if (!innings)
+        // 1. Fetch innings with team relations
+        const inning = await inningsRepo.findOne({
+            where: { id: inningsId, match_id: matchId },
+            relations: ['battingTeam', 'bowlingTeam']
+        });
+        if (!inning) {
             throw { status: 404, message: "Innings not found" };
-        // 2. Get striker and non-striker batsmen by their ids (one-to-one, join player)
-        // Filter out null/undefined IDs
-        const batsmanIds = [innings.striker_id, innings.non_striker_id].filter(id => id != null);
-        let striker = null;
-        let nonStriker = null;
-        if (batsmanIds.length > 0) {
-            const batsmen = await battingRepo.createQueryBuilder("bat")
-                .leftJoinAndSelect("bat.player", "player")
-                .where("bat.player_id IN (:...ids)", { ids: batsmanIds })
-                .getMany();
-            striker = batsmen.find(b => b.player_id == innings.striker_id);
-            nonStriker = batsmen.find(b => b.player_id == innings.non_striker_id);
         }
-        // 3. Get current over balls (minimal fields)
-        const currentOverBalls = await ballRepo.createQueryBuilder("ball")
-            .where("ball.innings_id = :iid AND ball.over_number = :over", { iid: innings.id, over: innings.current_over })
-            .select(["ball.ball_type", "ball.runs", "ball.is_wicket"])
-            .orderBy("ball.ball_number", "ASC")
-            .getMany();
-        // 4. Map batsman to LiveBatsman
-        const mapBatsman = (b) => b && b.player ? ({
+        // 2. Fetch all related data in parallel
+        const [batsmen, bowlers, balls] = await Promise.all([
+            battingRepo.find({
+                where: { innings_id: inningsId },
+                relations: ['player', 'bowler', 'fielder']
+            }),
+            bowlingRepo.find({
+                where: { innings_id: inningsId },
+                relations: ['player']
+            }),
+            ballRepo.find({
+                where: { innings_id: inningsId },
+                order: { over_number: 'ASC', ball_number: 'ASC' }
+            })
+        ]);
+        // 3. Find striker and non-striker
+        const striker = batsmen.find(b => b.player_id === inning.striker_id && !b.is_out);
+        const nonStriker = batsmen.find(b => b.player_id === inning.non_striker_id && !b.is_out);
+        // 4. Get dismissed batsmen
+        const dismissed = batsmen
+            .filter(b => b.is_out)
+            .map(b => ({
             id: b.player.id,
             n: b.player.full_name,
             r: b.runs,
             b: b.balls,
-            4: b.fours,
-            6: b.sixes
-        }) : null;
-        // 5. Map balls to OverBall type (object)
-        const mapBall = (ball) => {
-            let type = "";
-            if (ball.is_wicket)
-                type = "W";
-            else if (["WIDE", "Wd"].includes(ball.ball_type))
-                type = "Wd";
-            else if (["NO_BALL", "Nb"].includes(ball.ball_type))
-                type = "Nb";
-            else
-                type = String(ball.runs);
-            return { type, r: ball.runs };
-        };
+            w: {
+                type: b.wicket_type,
+                bowler: b.bowler?.full_name || null,
+                fielder: b.fielder?.full_name || null
+            },
+            o: b.dismissal_over
+        }));
+        // 5. Get current over balls
+        const currentOverBalls = balls.filter(b => b.over_number === inning.current_over);
+        let illegalBallsCount = 0;
+        for (const b of currentOverBalls) {
+            if (b.ball_type === 'WIDE' || b.ball_type === 'NO_BALL') {
+                illegalBallsCount++;
+            }
+        }
+        const isOverComplete = inning.balls % 6 === 0 && inning.balls > 0;
+        // 6. Return full detailed structure
         return {
-            i: innings.id,
-            ic: innings.is_completed,
-            r: innings.runs,
-            w: innings.wickets,
-            b: innings.balls,
-            st: mapBatsman(striker),
-            ns: mapBatsman(nonStriker),
-            ov: currentOverBalls.map(mapBall)
+            i: inning.id,
+            is_completed: inning.is_completed,
+            innings_number: inning.innings_number,
+            battingTeam: inning.battingTeam.short_name,
+            bowlingTeam: inning.bowlingTeam.short_name,
+            score: {
+                r: inning.runs,
+                w: inning.wickets,
+                b: inning.balls
+            },
+            batting: {
+                striker: striker ? {
+                    id: striker.player.id,
+                    n: striker.player.full_name,
+                    r: striker.runs,
+                    b: striker.balls,
+                    '4s': striker.fours,
+                    '6s': striker.sixes,
+                    sr: String(striker.strike_rate)
+                } : null,
+                nonStriker: nonStriker ? {
+                    id: nonStriker.player.id,
+                    n: nonStriker.player.full_name,
+                    r: nonStriker.runs,
+                    b: nonStriker.balls,
+                    '4s': nonStriker.fours,
+                    '6s': nonStriker.sixes,
+                    sr: String(nonStriker.strike_rate)
+                } : null
+            },
+            dismissed,
+            bowling: bowlers.map(b => ({
+                id: b.player.id,
+                n: b.player.full_name,
+                b: b.balls,
+                r: b.runs,
+                w: b.wickets,
+                e: String(b.economy)
+            })),
+            currentOver: {
+                o: inning.current_over,
+                isOverComplete,
+                bowlerId: inning.current_bowler_id,
+                ballsCount: currentOverBalls.length,
+                illegalBallsCount,
+                balls: currentOverBalls.map(ball => ({
+                    b: ball.ball_number,
+                    t: ball.ball_type,
+                    r: ball.is_wicket ? 'W' : ball.runs
+                }))
+            }
         };
     }
 }

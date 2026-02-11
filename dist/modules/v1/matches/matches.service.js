@@ -766,14 +766,17 @@ class MatchesService {
         };
     }
     static async recordBall(matchId, ballData, tenant_id) {
+        const apiStart = Date.now();
         const queryRunner = db_1.AppDataSource.createQueryRunner();
         await queryRunner.connect();
+        console.log("Connect time:", Date.now() - apiStart);
         await queryRunner.startTransaction();
+        console.log("Transaction started:", Date.now() - apiStart);
         try {
             const inningsRepository = queryRunner.manager.getRepository(MatchInnings_1.MatchInnings);
             const battingRepository = queryRunner.manager.getRepository(InningsBatting_1.InningsBatting);
             const bowlingRepository = queryRunner.manager.getRepository(InningsBowling_1.InningsBowling);
-            const ballRepository = queryRunner.manager.getRepository(BallByBall_1.BallByBall);
+            // const ballRepository = queryRunner.manager.getRepository(BallByBall);
             const matchRepo = queryRunner.manager.getRepository(Match_1.Match);
             const { ball_type, runs = 0, is_wicket = false, is_boundary = false, by_runs = 0, wicket } = ballData;
             const match = await matchRepo.findOne({
@@ -856,7 +859,11 @@ class MatchesService {
                 await bowlingRepository.update({ innings_id, tenant_id }, { is_current_bowler: false });
             }
             // 6. Create ball record
-            await ballRepository.insert({
+            const insertResult = await queryRunner.manager
+                .createQueryBuilder()
+                .insert()
+                .into(BallByBall_1.BallByBall)
+                .values({
                 match_id: matchId,
                 innings_id: innings.id,
                 over_number: innings.current_over,
@@ -869,17 +876,20 @@ class MatchesService {
                 is_wicket,
                 wicket_type: wicket?.wicket_type,
                 tenant_id
-            });
+            })
+                .returning("*") // 🔥 this is the key
+                .execute();
+            const insertedBall = insertResult.raw[0];
             // Fetch current over balls for response
-            const currentOverBalls = await ballRepository.find({
-                where: {
-                    innings_id: innings.id,
-                    over_number: innings.current_over,
-                    bowler_id: bowlerId,
-                    tenant_id
-                },
-                order: { ball_number: 'ASC' }
-            });
+            // const currentOverBalls = await ballRepository.find({
+            //     where: {
+            //         innings_id: innings.id,
+            //         over_number: innings.current_over,
+            //         bowler_id: bowlerId,
+            //         tenant_id
+            //     },
+            //     order: { ball_number: 'ASC' }
+            // });
             let innings_over = false;
             if (totalWickets === (match.playing_count || 11) - 1) {
                 innings_over = true;
@@ -917,7 +927,9 @@ class MatchesService {
                     });
                 }
             }
-            const illegalBallsCount = currentOverBalls.filter(ball => ['WIDE', 'NO_BALL'].includes(ball.ball_type)).length;
+            // const illegalBallsCount = currentOverBalls.filter(ball =>
+            //     ['WIDE', 'NO_BALL'].includes(ball.ball_type)
+            // ).length;
             await queryRunner.commitTransaction();
             // fire sse
             setImmediate(() => {
@@ -927,6 +939,7 @@ class MatchesService {
                     console.error("LiveScore SSE error:", err);
                 });
             });
+            console.log("Total API time:", Date.now() - apiStart);
             // Return UI-friendly response with computed final values
             return {
                 innings: innings_id,
@@ -950,13 +963,13 @@ class MatchesService {
                     o: isOverComplete ? innings.current_over + 1 : innings.current_over,
                     isOverComplete,
                     bowlerId,
-                    ballsCount: currentOverBalls.length,
-                    illegalBallsCount,
-                    balls: currentOverBalls.map(ball => ({
-                        b: ball.ball_number,
-                        t: ball.ball_type,
-                        r: ball.is_wicket ? 'W' : ball.runs
-                    }))
+                    // ballsCount: insertedBall.ball_number,
+                    isInLegalBall: isLegalBall ? false : true,
+                    ball: {
+                        b: insertedBall.ball_number,
+                        t: insertedBall.ball_type,
+                        r: insertedBall.is_wicket ? 'W' : insertedBall.runs
+                    }
                 },
                 timestamp: new Date().toISOString()
             };

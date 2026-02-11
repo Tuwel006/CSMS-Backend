@@ -9,6 +9,7 @@ const router = (0, express_1.Router)();
 // Public routes (no authentication required)
 router.get('/all', matches_controller_1.MatchesController.getAllMatches);
 router.get('/get-score/:id', matches_controller_1.MatchesController.getPublicMatchScore);
+router.get('/:id/score', matches_controller_1.MatchesController.getPublicMatchScore);
 // Apply auth middleware to all routes below
 router.use(auth_middleware_1.authMiddleware);
 router.use(auth_middleware_1.tenantAdminOnly);
@@ -18,7 +19,6 @@ router.delete('/team-setup/:matchId/:teamId', team_setup_controller_1.TeamSetupC
 router.post('/generate-token', matches_controller_1.MatchesController.generateMatchToken);
 router.delete('/delete-token/:id', matches_controller_1.MatchesController.deleteMatchToken);
 router.get('/current/:id', matches_controller_1.MatchesController.getCurrentCreatedMatch);
-router.get('/:id/score', matches_controller_1.MatchesController.getPublicMatchScore);
 router.get('/:id/available-batsmen', matches_controller_1.MatchesController.getAvailableBatsmen);
 router.get('/:id/bowling-team', matches_controller_1.MatchesController.getBowlingTeamPlayers);
 router.post('/:id/set-batsman', matches_controller_1.MatchesController.setBatsman);

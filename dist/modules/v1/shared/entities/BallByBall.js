@@ -88,5 +88,5 @@ __decorate([
 ], BallByBall.prototype, "updatedAt", void 0);
 exports.BallByBall = BallByBall = __decorate([
     (0, typeorm_1.Entity)('ball_by_ball'),
-    (0, typeorm_1.Index)("idx_ball_innings_over", ["innings_id", "over_number", "bowler_id", "ball_number", "tenant_id"])
+    (0, typeorm_1.Index)("idx_ball_innings_lookup", ["innings_id", "tenant_id", "over_number", "ball_number"])
 ], BallByBall);

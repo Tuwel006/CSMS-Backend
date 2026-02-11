@@ -3,6 +3,6 @@ import { scoreSSEHandler } from "../../../sse/score.sse";
 
 const router = Router();
 
-router.get('/score/:matchId/innings/:inningsId', scoreSSEHandler);
+router.get('/score/:matchId', scoreSSEHandler);
 
 export default router;

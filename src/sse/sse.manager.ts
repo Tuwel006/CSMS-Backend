@@ -28,7 +28,7 @@ class SSEManager {
     }
 
     public broadcast(matchId: string, event: string, data: LiveScorePayload): void {
-        const payload = `event: ${event} \ndata: ${JSON.stringify(data)}\n\n`;
+        const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
         if (this.clients.has(matchId)) {
             this.clients.get(matchId)!.forEach(res => {
                 res.write(payload);

@@ -9,7 +9,7 @@ class LiveScoreService {
     static async scoreEventService(matchId, inningsId) {
         const payload = await match_queries_1.LiveScoreQuery.build(matchId, inningsId);
         console.log("🚀 Debug - LiveScoreService - scoreEventService - payload:", payload);
-        redisScore_service_1.redisService.setScore({ matchId, inningsId, payload });
+        redisScore_service_1.redisService.setScore({ matchId, payload });
         sse_manager_1.sseManager.broadcast(matchId, "score", payload);
     }
 }
