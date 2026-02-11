@@ -1,4 +1,3 @@
-import { MatchesService } from "../modules/v1/matches/matches.service";
 import { sseManager } from "../sse/sse.manager";
 import { LiveScorePayload } from "../types/score.type";
 import { redisService } from "../services/redisScore.service";

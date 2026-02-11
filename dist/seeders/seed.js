@@ -13,6 +13,7 @@ const Permission_1 = require("../modules/v1/shared/entities/Permission");
 const Team_1 = require("../modules/v1/shared/entities/Team");
 const Role_1 = require("../modules/v1/shared/entities/Role");
 const RolePermission_1 = require("../modules/v1/shared/entities/RolePermission");
+const Player_1 = require("../modules/v1/shared/entities/Player");
 class DatabaseSeeder {
     static async run() {
         try {
@@ -21,6 +22,7 @@ class DatabaseSeeder {
             await this.seedPermissions();
             await this.seedGlobalAdmin();
             await this.seedTenantData();
+            await this.seedPlayers();
             console.log('✅ Database seeding completed successfully!');
         }
         catch (error) {
@@ -270,6 +272,41 @@ class DatabaseSeeder {
                     await rolePermissionRepository.save(rolePermission);
                 }
                 console.log(`🎭 Created role: ${role.name}`);
+            }
+        }
+    }
+    static async seedPlayers() {
+        const playerRepository = db_1.AppDataSource.getRepository(Player_1.Player);
+        const players = [
+            { full_name: 'Virat Kohli', role: Player_1.PlayerRole.BATSMAN },
+            { full_name: 'Rohit Sharma', role: Player_1.PlayerRole.BATSMAN },
+            { full_name: 'KL Rahul', role: Player_1.PlayerRole.WICKETKEEPER },
+            { full_name: 'Rishabh Pant', role: Player_1.PlayerRole.WICKETKEEPER },
+            { full_name: 'Hardik Pandya', role: Player_1.PlayerRole.ALLROUNDER },
+            { full_name: 'Ravindra Jadeja', role: Player_1.PlayerRole.ALLROUNDER },
+            { full_name: 'Jasprit Bumrah', role: Player_1.PlayerRole.BOWLER },
+            { full_name: 'Mohammed Shami', role: Player_1.PlayerRole.BOWLER },
+            { full_name: 'Yuzvendra Chahal', role: Player_1.PlayerRole.BOWLER },
+            { full_name: 'Kuldeep Yadav', role: Player_1.PlayerRole.BOWLER },
+            { full_name: 'Bhuvneshwar Kumar', role: Player_1.PlayerRole.BOWLER },
+            { full_name: 'Shikhar Dhawan', role: Player_1.PlayerRole.BATSMAN },
+            { full_name: 'Suryakumar Yadav', role: Player_1.PlayerRole.BATSMAN },
+            { full_name: 'Shreyas Iyer', role: Player_1.PlayerRole.BATSMAN },
+            { full_name: 'Axar Patel', role: Player_1.PlayerRole.ALLROUNDER },
+            { full_name: 'Deepak Chahar', role: Player_1.PlayerRole.BOWLER },
+            { full_name: 'Shardul Thakur', role: Player_1.PlayerRole.BOWLER },
+            { full_name: 'Mohammed Siraj', role: Player_1.PlayerRole.BOWLER },
+            { full_name: 'Ishan Kishan', role: Player_1.PlayerRole.WICKETKEEPER },
+            { full_name: 'Sanju Samson', role: Player_1.PlayerRole.WICKETKEEPER },
+            { full_name: 'Washington Sundar', role: Player_1.PlayerRole.ALLROUNDER },
+            { full_name: 'Venkatesh Iyer', role: Player_1.PlayerRole.ALLROUNDER }
+        ];
+        for (const playerData of players) {
+            const existing = await playerRepository.findOne({ where: { full_name: playerData.full_name } });
+            if (!existing) {
+                const player = playerRepository.create(playerData);
+                await playerRepository.save(player);
+                console.log(`👤 Created player: ${playerData.full_name}`);
             }
         }
     }

@@ -7,6 +7,7 @@ import { Permission } from '../modules/v1/shared/entities/Permission';
 import { Team } from '../modules/v1/shared/entities/Team';
 import { Role } from '../modules/v1/shared/entities/Role';
 import { RolePermission } from '../modules/v1/shared/entities/RolePermission';
+import { Player, PlayerRole } from '../modules/v1/shared/entities/Player';
 
 export class DatabaseSeeder {
   static async run() {
@@ -17,6 +18,7 @@ export class DatabaseSeeder {
       await this.seedPermissions();
       await this.seedGlobalAdmin();
       await this.seedTenantData();
+      await this.seedPlayers();
 
       console.log('✅ Database seeding completed successfully!');
     } catch (error) {
@@ -27,7 +29,7 @@ export class DatabaseSeeder {
 
   private static async seedPlans() {
     const planRepository = AppDataSource.getRepository(Plan);
-    
+
     const plans = [
       {
         name: 'Free',
@@ -96,7 +98,7 @@ export class DatabaseSeeder {
 
   private static async seedPermissions() {
     const permissionRepository = AppDataSource.getRepository(Permission);
-    
+
     const permissions = [
       { name: 'matches.create', resource: 'matches', action: 'create', description: 'Create new matches' },
       { name: 'matches.read', resource: 'matches', action: 'read', description: 'View matches' },
@@ -127,7 +129,7 @@ export class DatabaseSeeder {
     const userRepository = AppDataSource.getRepository(User);
     const tenantRepository = AppDataSource.getRepository(Tenant);
     const planRepository = AppDataSource.getRepository(Plan);
-    
+
     const adminData = {
       username: 'globaladmin',
       email: 'admin@csms.com',
@@ -154,11 +156,11 @@ export class DatabaseSeeder {
     if (!defaultTenant) {
       defaultTenant = tenantRepository.create(defaultTenantData);
       defaultTenant = await tenantRepository.save(defaultTenant);
-      
+
       // Assign tenant to admin user
       admin.tenant_id = defaultTenant.id;
       await userRepository.save(admin);
-      
+
       console.log('🏢 Created default tenant for admin');
     }
   }
@@ -199,11 +201,11 @@ export class DatabaseSeeder {
     if (!tenant) {
       const newTenant = tenantRepository.create(tenantData);
       tenant = await tenantRepository.save(newTenant);
-      
+
       // Update owner with tenant_id
       tenantOwner.tenant_id = tenant.id;
       await userRepository.save(tenantOwner);
-      
+
       console.log('🏢 Created tenant: Mumbai Cricket Club');
     }
 
@@ -272,8 +274,8 @@ export class DatabaseSeeder {
     ];
 
     for (const role of roleData) {
-      const existing = await roleRepository.findOne({ 
-        where: { name: role.name, tenant_id: role.tenant_id } 
+      const existing = await roleRepository.findOne({
+        where: { name: role.name, tenant_id: role.tenant_id }
       });
       if (!existing) {
         const newRole = roleRepository.create({
@@ -292,8 +294,46 @@ export class DatabaseSeeder {
           });
           await rolePermissionRepository.save(rolePermission);
         }
-        
+
         console.log(`🎭 Created role: ${role.name}`);
+      }
+    }
+  }
+
+  private static async seedPlayers() {
+    const playerRepository = AppDataSource.getRepository(Player);
+
+    const players = [
+      { full_name: 'Virat Kohli', role: PlayerRole.BATSMAN },
+      { full_name: 'Rohit Sharma', role: PlayerRole.BATSMAN },
+      { full_name: 'KL Rahul', role: PlayerRole.WICKETKEEPER },
+      { full_name: 'Rishabh Pant', role: PlayerRole.WICKETKEEPER },
+      { full_name: 'Hardik Pandya', role: PlayerRole.ALLROUNDER },
+      { full_name: 'Ravindra Jadeja', role: PlayerRole.ALLROUNDER },
+      { full_name: 'Jasprit Bumrah', role: PlayerRole.BOWLER },
+      { full_name: 'Mohammed Shami', role: PlayerRole.BOWLER },
+      { full_name: 'Yuzvendra Chahal', role: PlayerRole.BOWLER },
+      { full_name: 'Kuldeep Yadav', role: PlayerRole.BOWLER },
+      { full_name: 'Bhuvneshwar Kumar', role: PlayerRole.BOWLER },
+      { full_name: 'Shikhar Dhawan', role: PlayerRole.BATSMAN },
+      { full_name: 'Suryakumar Yadav', role: PlayerRole.BATSMAN },
+      { full_name: 'Shreyas Iyer', role: PlayerRole.BATSMAN },
+      { full_name: 'Axar Patel', role: PlayerRole.ALLROUNDER },
+      { full_name: 'Deepak Chahar', role: PlayerRole.BOWLER },
+      { full_name: 'Shardul Thakur', role: PlayerRole.BOWLER },
+      { full_name: 'Mohammed Siraj', role: PlayerRole.BOWLER },
+      { full_name: 'Ishan Kishan', role: PlayerRole.WICKETKEEPER },
+      { full_name: 'Sanju Samson', role: PlayerRole.WICKETKEEPER },
+      { full_name: 'Washington Sundar', role: PlayerRole.ALLROUNDER },
+      { full_name: 'Venkatesh Iyer', role: PlayerRole.ALLROUNDER }
+    ];
+
+    for (const playerData of players) {
+      const existing = await playerRepository.findOne({ where: { full_name: playerData.full_name } });
+      if (!existing) {
+        const player = playerRepository.create(playerData);
+        await playerRepository.save(player);
+        console.log(`👤 Created player: ${playerData.full_name}`);
       }
     }
   }

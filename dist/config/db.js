@@ -37,6 +37,25 @@ exports.connectDB = exports.AppDataSource = void 0;
 require("reflect-metadata");
 const typeorm_1 = require("typeorm");
 const dotenv = __importStar(require("dotenv"));
+const User_1 = require("../modules/v1/shared/entities/User");
+const Tenant_1 = require("../modules/v1/shared/entities/Tenant");
+const Match_1 = require("../modules/v1/shared/entities/Match");
+const Team_1 = require("../modules/v1/shared/entities/Team");
+const MatchInnings_1 = require("../modules/v1/shared/entities/MatchInnings");
+const InningsBatting_1 = require("../modules/v1/shared/entities/InningsBatting");
+const InningsBowling_1 = require("../modules/v1/shared/entities/InningsBowling");
+const BallByBall_1 = require("../modules/v1/shared/entities/BallByBall");
+const Player_1 = require("../modules/v1/shared/entities/Player");
+const PlayerStats_1 = require("../modules/v1/shared/entities/PlayerStats");
+const MatchPlayer_1 = require("../modules/v1/shared/entities/MatchPlayer");
+const Role_1 = require("../modules/v1/shared/entities/Role");
+const Permission_1 = require("../modules/v1/shared/entities/Permission");
+const RolePermission_1 = require("../modules/v1/shared/entities/RolePermission");
+const Plan_1 = require("../modules/v1/shared/entities/Plan");
+const PlanPermission_1 = require("../modules/v1/shared/entities/PlanPermission");
+const UserPlan_1 = require("../modules/v1/shared/entities/UserPlan");
+const UserRole_1 = require("../modules/v1/shared/entities/UserRole");
+const BallHistory_1 = require("../modules/v1/shared/entities/BallHistory");
 if (process.env.DOTENV_CONFIG_PATH) {
     dotenv.config({ path: process.env.DOTENV_CONFIG_PATH });
 }
@@ -55,7 +74,13 @@ exports.AppDataSource = new typeorm_1.DataSource({
     database: process.env.DB_NAME,
     synchronize: true,
     logging: false,
-    entities: [__dirname + '/../modules/v1/shared/entities/*.{ts,js}'],
+    entities: [
+        User_1.User, Tenant_1.Tenant, Match_1.Match, Team_1.Team, MatchInnings_1.MatchInnings,
+        InningsBatting_1.InningsBatting, InningsBowling_1.InningsBowling, BallByBall_1.BallByBall,
+        Player_1.Player, PlayerStats_1.PlayerStats, MatchPlayer_1.MatchPlayer, Role_1.Role,
+        Permission_1.Permission, RolePermission_1.RolePermission, Plan_1.Plan, PlanPermission_1.PlanPermission,
+        UserPlan_1.UserPlan, UserRole_1.UserRole, BallHistory_1.BallHistory
+    ],
     ssl: (isStaging || isProduction || isDevelopment) ? {
         rejectUnauthorized: false
     } : false,
