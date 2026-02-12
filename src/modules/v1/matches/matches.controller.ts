@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { MatchesService } from './matches.service';
-import { CreateMatchDto, GetMatchesQueryDto, MatchStartDto, UpdateMatchDto } from './matches.dto';
+import { CreateMatchDto, GetMatchesQueryDto, MatchStartDto, SwitchInningsDto, UpdateMatchDto } from './matches.dto';
 import { ApiResponse } from '../../../utils/ApiResponse';
 import { AuthRequest } from '../../../types/auth.types';
 
@@ -397,6 +397,26 @@ export class MatchesController {
 
             const result = await MatchesService.setBowler(matchId, bowlerData, tenantId);
             const response = ApiResponse.success(result, 'Bowler set successfully');
+            res.status(response.status).json(response);
+        } catch (error: any) {
+            const errorResponse = ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
+
+    static async switchToNextInnings(req: AuthRequest, res: Response) {
+        try {
+            const matchId = req.params.id;
+            const switchData: SwitchInningsDto = req.body;
+            const tenantId = req.user?.tenantId;
+
+            if (!tenantId) {
+                const response = ApiResponse.forbidden('Tenant ID is required');
+                return res.status(response.status).json(response);
+            }
+
+            const result = await MatchesService.switchToNextInnings(matchId, switchData, tenantId);
+            const response = ApiResponse.success(result, 'Switched to next innings successfully');
             res.status(response.status).json(response);
         } catch (error: any) {
             const errorResponse = ApiResponse.badRequest(error.message);

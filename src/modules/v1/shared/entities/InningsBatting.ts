@@ -60,6 +60,9 @@ export class InningsBatting {
   @Column()
   tenant_id: number;
 
+  @Column({ nullable: true })
+  order: number;
+
   @ManyToOne(() => MatchInnings)
   @JoinColumn({ name: 'innings_id' })
   innings: MatchInnings;

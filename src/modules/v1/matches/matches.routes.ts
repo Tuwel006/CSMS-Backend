@@ -26,6 +26,7 @@ router.get('/:id/bowling-team', MatchesController.getBowlingTeamPlayers);
 router.post('/:id/set-batsman', MatchesController.setBatsman);
 router.post('/:id/set-bowler', MatchesController.setBowler);
 router.post('/:id/record-ball', MatchesController.recordBall);
+router.post('/:id/next-innings', MatchesController.switchToNextInnings);
 router.patch('/:id/complete', MatchesController.completeMatch);
 router.patch('/schedule/:id', MatchesController.scheduleMatch);
 router.patch('/start/:id', MatchesController.startMatch);

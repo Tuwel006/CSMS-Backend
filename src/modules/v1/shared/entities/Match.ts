@@ -43,6 +43,9 @@ export class Match {
   venue: string;
 
   @Column({ nullable: true })
+  target_score: number;
+
+  @Column({ nullable: true })
   status: string;
 
   @Column({ nullable: true })

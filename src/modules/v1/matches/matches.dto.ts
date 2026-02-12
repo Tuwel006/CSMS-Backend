@@ -86,3 +86,7 @@ export interface GetMatchesQueryDto {
     sorted?: string;
     sorted_order?: 'ASC' | 'DESC';
 }
+
+export interface SwitchInningsDto {
+    isFollowOn: boolean;
+}

@@ -3,6 +3,7 @@ import { redisService } from "../services/redisScore.service";
 import { sseManager } from "./sse.manager";
 import { AppDataSource } from "../config/db";
 import { Match } from "../modules/v1/shared/entities/Match";
+import { LiveScorePayload } from "../types/score.type";
 
 export async function scoreSSEHandler(req: Request, res: Response) {
     const { matchId } = req.params;
@@ -18,7 +19,7 @@ export async function scoreSSEHandler(req: Request, res: Response) {
 
     res.flushHeaders();
 
-    let snapshot = null;
+    let snapshot: LiveScorePayload | null = null;
     try {
         snapshot = await redisService.getScore(matchId);
     } catch (err: any) {
@@ -37,6 +38,8 @@ export async function scoreSSEHandler(req: Request, res: Response) {
             if (match?.current_innings_id) {
                 const { LiveScoreQuery } = await import('../modules/v1/matches/match.queries');
                 snapshot = await LiveScoreQuery.build(matchId, match.current_innings_id);
+                // Store in Redis for future requests
+                await redisService.setScore({ matchId, payload: snapshot });
             }
         } catch (dbErr: any) {
             console.error('DB fallback failed:', dbErr.message);
