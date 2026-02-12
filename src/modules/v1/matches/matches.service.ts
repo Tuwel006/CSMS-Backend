@@ -1227,7 +1227,7 @@ export class MatchesService {
 
         const { player_id, is_striker = true, ret_hurt } = batsmanData;
 
-        if (!match.current_innings_id) {
+        if (!match.current_innings_id || match.current_innings_id === null) {
             throw { status: HTTP_STATUS.BAD_REQUEST, message: 'No active innings for this match' };
         }
 
@@ -1276,6 +1276,14 @@ export class MatchesService {
             { id: match.current_innings_id, tenant_id },
             innings.striker_id ? { non_striker_id: batsman.player_id } : { striker_id: batsman.player_id }
         );
+
+        setImmediate(() => {
+            LiveScoreService
+                .scoreEventService(matchId, match.current_innings_id!)
+                .catch(err => {
+                    console.error("LiveScore SSE error:", err);
+                });
+        });
 
         return { success: true, message: 'Batsman set successfully' };
     }
@@ -1345,6 +1353,14 @@ export class MatchesService {
 
         bowler.is_current_bowler = true;
         await bowlingRepository.save(bowler);
+
+        setImmediate(() => {
+            LiveScoreService
+                .scoreEventService(matchId, match.current_innings_id!)
+                .catch(err => {
+                    console.error("LiveScore SSE error:", err);
+                });
+        });
 
         return { success: true, message: 'Bowler set successfully' };
     }

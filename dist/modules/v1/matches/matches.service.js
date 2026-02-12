@@ -1066,7 +1066,7 @@ class MatchesService {
             throw { status: status_codes_1.HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
         }
         const { player_id, is_striker = true, ret_hurt } = batsmanData;
-        if (!match.current_innings_id) {
+        if (!match.current_innings_id || match.current_innings_id === null) {
             throw { status: status_codes_1.HTTP_STATUS.BAD_REQUEST, message: 'No active innings for this match' };
         }
         // If setting ret_hurt, update existing batsman
@@ -1104,6 +1104,13 @@ class MatchesService {
         });
         await battingRepository.save(batsman);
         await inningsRepository.update({ id: match.current_innings_id, tenant_id }, innings.striker_id ? { non_striker_id: batsman.player_id } : { striker_id: batsman.player_id });
+        setImmediate(() => {
+            liveScore_orchestrator_1.LiveScoreService
+                .scoreEventService(matchId, match.current_innings_id)
+                .catch(err => {
+                console.error("LiveScore SSE error:", err);
+            });
+        });
         return { success: true, message: 'Batsman set successfully' };
     }
     static async setBowler(matchId, bowlerData, tenant_id) {
@@ -1153,6 +1160,13 @@ class MatchesService {
         }
         bowler.is_current_bowler = true;
         await bowlingRepository.save(bowler);
+        setImmediate(() => {
+            liveScore_orchestrator_1.LiveScoreService
+                .scoreEventService(matchId, match.current_innings_id)
+                .catch(err => {
+                console.error("LiveScore SSE error:", err);
+            });
+        });
         return { success: true, message: 'Bowler set successfully' };
     }
     static async completeMatch(matchId, tenant_id) {
