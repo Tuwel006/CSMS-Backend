@@ -66,6 +66,8 @@ async function scoreSSEHandler(req, res) {
             if (match?.current_innings_id) {
                 const { LiveScoreQuery } = await Promise.resolve().then(() => __importStar(require('../modules/v1/matches/match.queries')));
                 snapshot = await LiveScoreQuery.build(matchId, match.current_innings_id);
+                // Store in Redis for future requests
+                await redisScore_service_1.redisService.setScore({ matchId, payload: snapshot });
             }
         }
         catch (dbErr) {

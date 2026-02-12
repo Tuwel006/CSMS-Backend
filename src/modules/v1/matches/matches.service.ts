@@ -736,7 +736,6 @@ export class MatchesService {
 
             const striker = batsmen.find(b => b.player_id === inning.striker_id && !b.is_out);
             const nonStriker = batsmen.find(b => b.player_id === inning.non_striker_id && !b.is_out);
-            console.log("striker", striker, "nonStriker", nonStriker, "batsmen", batsmen);
             const dismissed = batsmen
                 .filter(b => b.is_out)
                 .map(b => ({
@@ -834,7 +833,9 @@ export class MatchesService {
                     format: match.format,
                     status: match.status,
                     currentInningsId: match.current_innings_id,
-                    lastUpdated: match.updatedAt
+                    lastUpdated: match.updatedAt,
+                    isMatchCompleted: match.is_completed,
+                    winnerTeamId: match.winner_team_id,
                 },
                 teams: {
                     A: {
@@ -876,7 +877,7 @@ export class MatchesService {
 
             const match = await matchRepo.findOne({
                 where: { id: matchId, tenant_id },
-                select: ["id", "current_innings_id", "playing_count", "format", "no_of_innings"]
+                select: ["id", "current_innings_id", "playing_count", "format", "no_of_innings", "target_score"]
             });
 
             if (match?.current_innings_id === null || match?.current_innings_id === undefined) {
@@ -1025,6 +1026,13 @@ export class MatchesService {
             if (totalBalls === Number(match.format) * 6) {
                 innings_over = true;
             }
+            if (totalRuns >= match.target_score && innings.innings_number === match.no_of_innings) {
+                console.log("match.target_score>>>>>>", match.target_score);
+                console.log("totalRuns>>>>>>", totalRuns);
+                console.log("innings.innings_number>>>>>>", innings.innings_number);
+                console.log("match.no_of_innings>>>>>>", match.no_of_innings);
+                innings_over = true;
+            }
 
             // 1. Update innings (atomic SQL)
             await inningsRepository.update(
@@ -1052,19 +1060,43 @@ export class MatchesService {
             let isMatchCompleted = false;
 
             // last ball winer decide
-            if (innings_over) {
-                // await matchRepo.update(
-                //     { id: match.id, tenant_id },
-                //     {
-                //         current_innings_id: null
-                //     }
-                // );
-                if (match.no_of_innings === innings.innings_number) {
+            // if (innings_over) {
+            //     // await matchRepo.update(
+            //     //     { id: match.id, tenant_id },
+            //     //     {
+            //     //         current_innings_id: null
+            //     //     }
+            //     // );
+            //     if (match.no_of_innings === innings.innings_number) {
+            //         await matchRepo.update(
+            //             { id: match.id, tenant_id },
+            //             {
+            //                 is_completed: true,
+            //                 winner_team_id: match?.target_score > totalRuns ? innings.bowling_team_id : innings.batting_team_id,
+            //                 status: 'COMPLETED'
+            //             }
+            //         );
+            //         isMatchCompleted = true;
+            //     }
+            //     else {
+            //         await matchRepo.update(
+            //             { id: match.id, tenant_id },
+            //             {
+            //                 target_score: innings.runs + runsToAdd + 1,
+            //             }
+            //         );
+            //     }
+            // }
+
+            if (innings_over && match.no_of_innings === innings.innings_number) {
+                console.log("match.target_score", match.target_score);
+                console.log("totalRuns", totalRuns);
+                if (totalRuns >= match?.target_score) {
                     await matchRepo.update(
                         { id: match.id, tenant_id },
                         {
+                            winner_team_id: innings.batting_team_id,
                             is_completed: true,
-                            winner_team_id: match?.target_score > totalRuns ? innings.bowling_team_id : innings.batting_team_id,
                             status: 'COMPLETED'
                         }
                     );
@@ -1074,22 +1106,13 @@ export class MatchesService {
                     await matchRepo.update(
                         { id: match.id, tenant_id },
                         {
-                            target_score: innings.runs + runsToAdd + 1,
+                            winner_team_id: innings.bowling_team_id,
+                            is_completed: true,
+                            status: 'COMPLETED'
                         }
                     );
+                    isMatchCompleted = true;
                 }
-            }
-
-            if (match.no_of_innings === innings.innings_number && match?.target_score <= totalRuns) {
-                await matchRepo.update(
-                    { id: match.id, tenant_id },
-                    {
-                        winner_team_id: innings.batting_team_id,
-                        is_completed: true,
-                        status: 'COMPLETED'
-                    }
-                );
-                isMatchCompleted = true;
             }
 
 
@@ -1112,8 +1135,7 @@ export class MatchesService {
             // Return UI-friendly response with computed final values
             return {
                 innings: innings_id,
-                is_innings_over: innings_over,
-                is_Match_completed: isMatchCompleted,
+                is_innings_over: innings_over || isMatchCompleted,
                 totalRuns,
                 totalWickets,
                 totalBalls,

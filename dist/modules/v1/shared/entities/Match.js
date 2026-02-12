@@ -50,6 +50,10 @@ __decorate([
 ], Match.prototype, "venue", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], Match.prototype, "target_score", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Match.prototype, "status", void 0);
 __decorate([

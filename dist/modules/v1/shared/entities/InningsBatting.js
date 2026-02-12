@@ -81,6 +81,10 @@ __decorate([
     __metadata("design:type", Number)
 ], InningsBatting.prototype, "tenant_id", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], InningsBatting.prototype, "order", void 0);
+__decorate([
     (0, typeorm_1.ManyToOne)(() => MatchInnings_1.MatchInnings),
     (0, typeorm_1.JoinColumn)({ name: 'innings_id' }),
     __metadata("design:type", MatchInnings_1.MatchInnings)

@@ -353,5 +353,23 @@ class MatchesController {
             res.status(errorResponse.status).json(errorResponse);
         }
     }
+    static async switchToNextInnings(req, res) {
+        try {
+            const matchId = req.params.id;
+            const switchData = req.body;
+            const tenantId = req.user?.tenantId;
+            if (!tenantId) {
+                const response = ApiResponse_1.ApiResponse.forbidden('Tenant ID is required');
+                return res.status(response.status).json(response);
+            }
+            const result = await matches_service_1.MatchesService.switchToNextInnings(matchId, switchData, tenantId);
+            const response = ApiResponse_1.ApiResponse.success(result, 'Switched to next innings successfully');
+            res.status(response.status).json(response);
+        }
+        catch (error) {
+            const errorResponse = ApiResponse_1.ApiResponse.badRequest(error.message);
+            res.status(errorResponse.status).json(errorResponse);
+        }
+    }
 }
 exports.MatchesController = MatchesController;
