@@ -11,7 +11,7 @@ import { InningsBatting } from '../shared/entities/InningsBatting';
 import { InningsBowling } from '../shared/entities/InningsBowling';
 import { BallByBall } from '../shared/entities/BallByBall';
 import { TeamService } from '../teams/team.service';
-import { CreateMatchDto, GetMatchesQueryDto, MatchStartDto, RecordBallDto, SwitchInningsDto, UpdateMatchDto } from './matches.dto';
+import { CreateMatchDto, GetMatchesQueryDto, MatchStartDto, RecordBallDto, SwitchInningsDto, UpdateMatchDto, CompleteMatchDto } from './matches.dto';
 import { HTTP_STATUS } from '../../../constants/status-codes';
 import { Not, IsNull, In } from 'typeorm';
 import { LiveBatsman } from '../../../types/score.type';
@@ -337,6 +337,8 @@ export class MatchesService {
             match_date: match.match_date,
             format: match.format,
             venue: match.venue,
+            is_completed: match.is_completed,
+            is_active: match.is_active,
             status: match.status,
             current_innings_id: match.current_innings_id,
             umpire_1: match.umpire_1,
@@ -457,6 +459,8 @@ export class MatchesService {
             await queryRunner.release();
         }
     }
+
+
 
     static async getMatchScore(matchId: string, tenant_id: number) {
         const matchRepo = AppDataSource.getRepository(Match);
@@ -827,7 +831,9 @@ export class MatchesService {
         /* 5️⃣ Final response (UNCHANGED STRUCTURE) */
         return {
             success: true,
+
             data: {
+                is_active: match.is_active,
                 meta: {
                     matchId: match.id,
                     format: match.format,
@@ -1415,52 +1421,37 @@ export class MatchesService {
         return { success: true, message: 'Bowler set successfully' };
     }
 
-    static async completeMatch(matchId: string, tenant_id: number) {
+    static async completeMatch(matchId: string, data: CompleteMatchDto, tenant_id: number) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
         try {
             const matchRepository = queryRunner.manager.getRepository(Match);
-            const ballRepository = queryRunner.manager.getRepository(BallByBall);
-            const { BallHistory } = await import('../shared/entities/BallHistory');
-            const ballHistoryRepository = queryRunner.manager.getRepository(BallHistory);
 
             const match = await matchRepository.findOne({ where: { id: matchId, tenant_id } });
             if (!match) {
                 throw { status: HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
             }
 
-            // Archive ball-by-ball data
-            const ballData = await ballRepository.find({
-                where: { match_id: matchId, tenant_id },
-                relations: ['innings']
-            });
+            // Update match status and details
+            match.status = 'COMPLETED';
+            match.is_active = false;
+            match.is_completed = true;
+            match.man_of_the_match_player_id = data.man_of_the_match_player_id;
 
-            if (ballData.length > 0) {
-                const historyData = ballData.map((ball: any) => ({
-                    match_id: ball.match_id,
-                    innings_number: ball.innings?.innings_number || 1,
-                    batting_team_id: ball.batting_team_id,
-                    bowling_team_id: ball.bowling_team_id,
-                    over_number: ball.over_number,
-                    ball_number: ball.ball_number,
-                    ball_type: ball.ball_type,
-                    runs: ball.runs,
-                    batsman_id: ball.batsman_id,
-                    bowler_id: ball.bowler_id,
-                    is_wicket: ball.is_wicket,
-                    wicket_type: ball.wicket_type,
-                    tenant_id: ball.tenant_id
-                }));
-                await ballHistoryRepository.save(historyData);
-
-                // Delete from live table
-                await ballRepository.delete({ match_id: matchId, tenant_id });
+            if (!data.is_match_tied) {
+                if (data.result_description) {
+                    match.result_description = data.result_description;
+                }
+                if (data.winner_team_id) {
+                    match.winner_team_id = data.winner_team_id;
+                }
+            } else {
+                match.result_description = 'Match Tied';
+                match.winner_team_id = null as any;
             }
 
-            // Update match status
-            match.status = 'COMPLETED';
             await matchRepository.save(match);
 
             await queryRunner.commitTransaction();

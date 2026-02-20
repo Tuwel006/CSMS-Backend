@@ -1219,7 +1219,7 @@ class MatchesService {
         });
         return { success: true, message: 'Bowler set successfully' };
     }
-    static async completeMatch(matchId, tenant_id) {
+    static async completeMatch(matchId, data, tenant_id) {
         const queryRunner = db_1.AppDataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -1257,8 +1257,22 @@ class MatchesService {
                 // Delete from live table
                 await ballRepository.delete({ match_id: matchId, tenant_id });
             }
-            // Update match status
+            // Update match status and details
             match.status = 'COMPLETED';
+            match.is_active = false;
+            match.is_completed = true;
+            match.man_of_the_match_player_id = data.man_of_the_match_player_id;
+            if (!data.is_match_tied) {
+                if (!data.winner_team_id || !data.result_description) {
+                    throw { status: status_codes_1.HTTP_STATUS.BAD_REQUEST, message: 'Winner and result description are required for non-tied matches' };
+                }
+                match.winner_team_id = data.winner_team_id;
+                match.result_description = data.result_description;
+            }
+            else {
+                match.result_description = 'Match Tied';
+                match.winner_team_id = null;
+            }
             await matchRepository.save(match);
             await queryRunner.commitTransaction();
             return { success: true, message: 'Match completed and data archived successfully' };

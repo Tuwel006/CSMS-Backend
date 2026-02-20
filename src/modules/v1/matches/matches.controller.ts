@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { MatchesService } from './matches.service';
-import { CreateMatchDto, GetMatchesQueryDto, MatchStartDto, SwitchInningsDto, UpdateMatchDto } from './matches.dto';
+import { CreateMatchDto, GetMatchesQueryDto, MatchStartDto, SwitchInningsDto, UpdateMatchDto, CompleteMatchDto } from './matches.dto';
 import { ApiResponse } from '../../../utils/ApiResponse';
 import { AuthRequest } from '../../../types/auth.types';
 
@@ -348,6 +348,7 @@ export class MatchesController {
     static async completeMatch(req: AuthRequest, res: Response) {
         try {
             const matchId = req.params.id;
+            const completeData: CompleteMatchDto = req.body;
             const tenantId = req.user?.tenantId;
 
             if (!tenantId) {
@@ -355,7 +356,7 @@ export class MatchesController {
                 return res.status(response.status).json(response);
             }
 
-            const result = await MatchesService.completeMatch(matchId, tenantId);
+            const result = await MatchesService.completeMatch(matchId, completeData, tenantId);
             const response = ApiResponse.success(result, 'Match completed successfully');
             res.status(response.status).json(response);
         } catch (error: any) {

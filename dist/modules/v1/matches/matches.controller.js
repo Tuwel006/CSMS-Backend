@@ -303,12 +303,13 @@ class MatchesController {
     static async completeMatch(req, res) {
         try {
             const matchId = req.params.id;
+            const completeData = req.body;
             const tenantId = req.user?.tenantId;
             if (!tenantId) {
                 const response = ApiResponse_1.ApiResponse.forbidden('Tenant ID is required');
                 return res.status(response.status).json(response);
             }
-            const result = await matches_service_1.MatchesService.completeMatch(matchId, tenantId);
+            const result = await matches_service_1.MatchesService.completeMatch(matchId, completeData, tenantId);
             const response = ApiResponse_1.ApiResponse.success(result, 'Match completed successfully');
             res.status(response.status).json(response);
         }

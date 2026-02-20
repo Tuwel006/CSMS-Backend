@@ -90,3 +90,10 @@ export interface GetMatchesQueryDto {
 export interface SwitchInningsDto {
     isFollowOn: boolean;
 }
+
+export interface CompleteMatchDto {
+    is_match_tied: boolean;
+    man_of_the_match_player_id: number;
+    winner_team_id?: number;
+    result_description?: string;
+}
