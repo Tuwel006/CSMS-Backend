@@ -2,39 +2,6 @@
 /**
  * Returns a fast, minimal LiveScorePayload for SSE
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MatchesService = void 0;
 const db_1 = require("../../../config/db");
@@ -313,6 +280,8 @@ class MatchesService {
             match_date: match.match_date,
             format: match.format,
             venue: match.venue,
+            is_completed: match.is_completed,
+            is_active: match.is_active,
             status: match.status,
             current_innings_id: match.current_innings_id,
             umpire_1: match.umpire_1,
@@ -742,6 +711,7 @@ class MatchesService {
         return {
             success: true,
             data: {
+                is_active: match.is_active,
                 meta: {
                     matchId: match.id,
                     format: match.format,
@@ -1225,37 +1195,9 @@ class MatchesService {
         await queryRunner.startTransaction();
         try {
             const matchRepository = queryRunner.manager.getRepository(Match_1.Match);
-            const ballRepository = queryRunner.manager.getRepository(BallByBall_1.BallByBall);
-            const { BallHistory } = await Promise.resolve().then(() => __importStar(require('../shared/entities/BallHistory')));
-            const ballHistoryRepository = queryRunner.manager.getRepository(BallHistory);
             const match = await matchRepository.findOne({ where: { id: matchId, tenant_id } });
             if (!match) {
                 throw { status: status_codes_1.HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
-            }
-            // Archive ball-by-ball data
-            const ballData = await ballRepository.find({
-                where: { match_id: matchId, tenant_id },
-                relations: ['innings']
-            });
-            if (ballData.length > 0) {
-                const historyData = ballData.map((ball) => ({
-                    match_id: ball.match_id,
-                    innings_number: ball.innings?.innings_number || 1,
-                    batting_team_id: ball.batting_team_id,
-                    bowling_team_id: ball.bowling_team_id,
-                    over_number: ball.over_number,
-                    ball_number: ball.ball_number,
-                    ball_type: ball.ball_type,
-                    runs: ball.runs,
-                    batsman_id: ball.batsman_id,
-                    bowler_id: ball.bowler_id,
-                    is_wicket: ball.is_wicket,
-                    wicket_type: ball.wicket_type,
-                    tenant_id: ball.tenant_id
-                }));
-                await ballHistoryRepository.save(historyData);
-                // Delete from live table
-                await ballRepository.delete({ match_id: matchId, tenant_id });
             }
             // Update match status and details
             match.status = 'COMPLETED';
@@ -1263,11 +1205,12 @@ class MatchesService {
             match.is_completed = true;
             match.man_of_the_match_player_id = data.man_of_the_match_player_id;
             if (!data.is_match_tied) {
-                if (!data.winner_team_id || !data.result_description) {
-                    throw { status: status_codes_1.HTTP_STATUS.BAD_REQUEST, message: 'Winner and result description are required for non-tied matches' };
+                if (data.result_description) {
+                    match.result_description = data.result_description;
                 }
-                match.winner_team_id = data.winner_team_id;
-                match.result_description = data.result_description;
+                if (data.winner_team_id) {
+                    match.winner_team_id = data.winner_team_id;
+                }
             }
             else {
                 match.result_description = 'Match Tied';

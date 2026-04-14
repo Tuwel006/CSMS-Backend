@@ -4,6 +4,7 @@ import { plansRoutes, planPermissionRoutes } from './admin';
 import tenantRoutes from './tenant';
 import { teamRoutes } from './teams';
 import { playerRoutes } from './players';
+import tournamentRoutes from './tournaments/tournament.routes';
 import { matchesRoutes } from './matches';
 import { authMiddleware } from './shared/middlewares/auth.middleware';
 import sseRoutes from './sse';
@@ -22,6 +23,9 @@ router.use('/tenant', tenantRoutes);
 
 // Teams routes
 router.use('/teams', authMiddleware, teamRoutes);
+
+// Tournaments routes
+router.use('/tournaments', authMiddleware, tournamentRoutes);
 
 // Players routes
 router.use('/players', authMiddleware, playerRoutes);

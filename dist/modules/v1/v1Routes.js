@@ -9,6 +9,7 @@ const admin_1 = require("./admin");
 const tenant_1 = __importDefault(require("./tenant"));
 const teams_1 = require("./teams");
 const players_1 = require("./players");
+const tournament_routes_1 = __importDefault(require("./tournaments/tournament.routes"));
 const matches_1 = require("./matches");
 const auth_middleware_1 = require("./shared/middlewares/auth.middleware");
 const sse_1 = __importDefault(require("./sse"));
@@ -22,6 +23,8 @@ router.use('/admin/plan-permissions', admin_1.planPermissionRoutes);
 router.use('/tenant', tenant_1.default);
 // Teams routes
 router.use('/teams', auth_middleware_1.authMiddleware, teams_1.teamRoutes);
+// Tournaments routes
+router.use('/tournaments', auth_middleware_1.authMiddleware, tournament_routes_1.default);
 // Players routes
 router.use('/players', auth_middleware_1.authMiddleware, players_1.playerRoutes);
 // Matches routes (auth handled in matches.routes.ts)
