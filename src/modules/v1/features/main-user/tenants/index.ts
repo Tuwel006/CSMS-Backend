@@ -1,6 +1,6 @@
-export { TenantController } from './tenant.controller';
-export { TenantService } from './tenant.service';
-export * from './tenant.dto';
-import './tenant.swagger';
-import tenantRoutes from './tenant.routes';
+export { TenantController } from './controller';
+export { TenantService } from './service';
+export * from './dtos/tenant.dto';
+import './swagger/tenant.swagger';
+import tenantRoutes from './routes';
 export { tenantRoutes };

@@ -1,5 +1,5 @@
-export { DashboardController } from './dashboard.controller';
-export { DashboardService } from './dashboard.service';
-import './dashboard.swagger';
-import dashboardRoutes from './dashboard.routes';
+export { DashboardController } from './controller';
+export { DashboardService } from './service';
+import './swagger/dashboard.swagger';
+import dashboardRoutes from './routes';
 export { dashboardRoutes };

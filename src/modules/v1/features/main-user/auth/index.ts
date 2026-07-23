@@ -1,4 +1,6 @@
-export { UserAuthController } from './auth.controller';
-export { AuthService } from './auth.service';
-export * from './auth.dto';
-export { default as userAuthRoutes } from './auth.routes';
+export { UserAuthController } from './controller';
+export { AuthService } from './service';
+export * from './dtos/auth.dto';
+export * from './dtos/auth.validation';
+export { userAuthPaths } from './swagger/auth.swagger';
+export { default as userAuthRoutes } from './routes';

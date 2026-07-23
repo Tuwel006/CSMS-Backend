@@ -1,10 +1,6 @@
-export { MatchesController } from './match.controller';
-export { MatchesService } from './match.service';
-export { TeamSetupController } from './team-setup.controller';
-export { TeamSetupService } from './team-setup.service';
-export * from './match.dto';
-import './match.swagger';
-import { matchPaths as matchesPaths } from './match.swagger';
-export { matchesPaths };
-export { default as matchesRoutes } from './match.routes';
-
+export { MatchesController } from './controller';
+export { MatchesService } from './service';
+export { LiveScoreQuery } from './queries';
+export * from './dtos/match.dto';
+export { default as matchesRoutes } from './routes';
+export { matchPaths } from './swagger/match.swagger';

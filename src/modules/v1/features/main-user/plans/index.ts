@@ -1,6 +1,5 @@
-export { PlansController } from './plan.controller';
-export { PlansService } from './plan.service';
-export * from './plan.dto';
-import { planPaths as plansPaths } from './plan.swagger';
-export { plansPaths };
-export { default as plansRoutes } from './plan.routes';
+export { PlansController } from './controller';
+export { PlansService } from './service';
+export * from './dtos/plan.dto';
+export { planPaths as plansPaths } from './swagger/plan.swagger';
+export { default as plansRoutes } from './routes';

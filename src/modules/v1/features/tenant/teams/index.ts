@@ -1,6 +1,6 @@
-export { TeamController } from './team.controller';
-export { TeamService } from './team.service';
-export * from './team.dto';
-import './team.swagger';
-import teamRoutes from './team.routes';
+export { TeamController } from './controller';
+export { TeamService } from './service';
+export * from './dtos/team.dto';
+import './swagger/team.swagger';
+import teamRoutes from './routes';
 export { teamRoutes };

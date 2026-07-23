@@ -1,3 +1,3 @@
-export { default as playerRoutes } from './player.routes';
-import { playerPaths } from './player.swagger';
+export { default as playerRoutes } from './routes';
+import { playerPaths } from './swagger/player.swagger';
 export { playerPaths };
