@@ -48,15 +48,7 @@ const BallByBall_1 = require("../modules/v1/shared/entities/BallByBall");
 const Player_1 = require("../modules/v1/shared/entities/Player");
 const PlayerStats_1 = require("../modules/v1/shared/entities/PlayerStats");
 const MatchPlayer_1 = require("../modules/v1/shared/entities/MatchPlayer");
-const Role_1 = require("../modules/v1/shared/entities/Role");
-const Permission_1 = require("../modules/v1/shared/entities/Permission");
-const RolePermission_1 = require("../modules/v1/shared/entities/RolePermission");
 const Plan_1 = require("../modules/v1/shared/entities/Plan");
-const PlanPermission_1 = require("../modules/v1/shared/entities/PlanPermission");
-const UserPlan_1 = require("../modules/v1/shared/entities/UserPlan");
-const UserRole_1 = require("../modules/v1/shared/entities/UserRole");
-const BallHistory_1 = require("../modules/v1/shared/entities/BallHistory");
-const Tournament_1 = require("../modules/v1/shared/entities/Tournament");
 if (process.env.DOTENV_CONFIG_PATH) {
     dotenv.config({ path: process.env.DOTENV_CONFIG_PATH });
 }
@@ -78,9 +70,7 @@ exports.AppDataSource = new typeorm_1.DataSource({
     entities: [
         User_1.User, Tenant_1.Tenant, Match_1.Match, Team_1.Team, MatchInnings_1.MatchInnings,
         InningsBatting_1.InningsBatting, InningsBowling_1.InningsBowling, BallByBall_1.BallByBall,
-        Player_1.Player, PlayerStats_1.PlayerStats, MatchPlayer_1.MatchPlayer, Role_1.Role,
-        Permission_1.Permission, RolePermission_1.RolePermission, Plan_1.Plan, PlanPermission_1.PlanPermission,
-        UserPlan_1.UserPlan, UserRole_1.UserRole, BallHistory_1.BallHistory, Tournament_1.Tournament
+        Player_1.Player, PlayerStats_1.PlayerStats, MatchPlayer_1.MatchPlayer, Plan_1.Plan
     ],
     ssl: (isStaging || isProduction || isDevelopment) ? {
         rejectUnauthorized: false

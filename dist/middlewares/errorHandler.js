@@ -1,16 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.errorHandler = errorHandler;
+const ApiResponse_1 = require("../utils/ApiResponse");
 function errorHandler(err, req, res, next) {
-    // Default to 500 Internal Server Error
     const status = err.status || 500;
     const message = err.message || 'Internal Server Error';
-    // Optionally log the error
     console.error(err);
-    res.status(status).json({
-        success: false,
-        error: {
-            message,
-        },
-    });
+    const response = ApiResponse_1.ApiResponse.serverError(message);
+    res.status(status).json(response);
 }

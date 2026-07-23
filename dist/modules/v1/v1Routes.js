@@ -1,34 +1,25 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const user_1 = require("./user");
-const admin_1 = require("./admin");
-const tenant_1 = __importDefault(require("./tenant"));
-const teams_1 = require("./teams");
-const players_1 = require("./players");
-const tournament_routes_1 = __importDefault(require("./tournaments/tournament.routes"));
-const matches_1 = require("./matches");
+const auth_1 = require("./features/main-user/auth");
+const plans_1 = require("./features/main-user/plans");
+const tenants_1 = require("./features/main-user/tenants");
+const dashboard_1 = require("./features/tenant/dashboard");
+const teams_1 = require("./features/tenant/teams");
+const players_1 = require("./features/tenant/players");
+const matches_1 = require("./features/tenant/matches");
 const auth_middleware_1 = require("./shared/middlewares/auth.middleware");
-const sse_1 = __importDefault(require("./sse"));
+const realtime_1 = require("../../realtime");
 const router = (0, express_1.Router)();
-// User routes
-router.use('/user/auth', user_1.userAuthRoutes);
-// Admin routes
-router.use('/admin/plans', admin_1.plansRoutes);
-router.use('/admin/plan-permissions', admin_1.planPermissionRoutes);
-// Tenant routes
-router.use('/tenant', tenant_1.default);
-// Teams routes
+// Main-user (system-admin) features
+router.use('/user/auth', auth_1.userAuthRoutes);
+router.use('/admin/plans', plans_1.plansRoutes);
+router.use('/tenants', tenants_1.tenantRoutes);
+// Tenant-scoped features
+router.use('/tenant/dashboard', dashboard_1.dashboardRoutes);
 router.use('/teams', auth_middleware_1.authMiddleware, teams_1.teamRoutes);
-// Tournaments routes
-router.use('/tournaments', auth_middleware_1.authMiddleware, tournament_routes_1.default);
-// Players routes
 router.use('/players', auth_middleware_1.authMiddleware, players_1.playerRoutes);
-// Matches routes (auth handled in matches.routes.ts)
 router.use('/matches', matches_1.matchesRoutes);
-//sse routes
-router.use('/sse', sse_1.default);
+// SSE route
+router.get('/sse/score/:matchId', realtime_1.scoreSSEHandler);
 exports.default = router;

@@ -11,6 +11,7 @@ const middlewares_1 = require("./middlewares");
 const morgan_1 = __importDefault(require("morgan"));
 const swagger_1 = require("./config/swagger");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
+const realtime_1 = require("./realtime");
 const app = (0, express_1.default)();
 const allowedOrigins = [
     'http://localhost:5000',
@@ -28,6 +29,13 @@ app.use((0, morgan_1.default)('dev'));
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 // app.use(bodyParser);
+// Initialize the realtime module (SSE + Redis pub/sub). The container is
+// built once and exposed via getters (getLiveScorePublisher etc.) so the
+// rest of the app can publish after DB commits.
+(0, realtime_1.initializeRealtime)().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error('Failed to initialize realtime module:', err);
+});
 // Root health check route
 app.get('/', (_req, res) => {
     res.status(200).json({

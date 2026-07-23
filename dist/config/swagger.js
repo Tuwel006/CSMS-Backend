@@ -7,15 +7,14 @@ exports.specs = exports.swaggerUi = void 0;
 const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 exports.swaggerUi = swagger_ui_express_1.default;
-const userAuth_swagger_1 = require("../modules/v1/user/auth/userAuth.swagger");
-const plans_swagger_1 = require("../modules/v1/admin/plans/plans.swagger");
-const plan_permission_swagger_1 = require("../modules/v1/admin/plan-permissions/plan-permission.swagger");
-const tenant_swagger_1 = require("../modules/v1/tenant/tenants/tenant.swagger");
-const role_swagger_1 = require("../modules/v1/tenant/roles/role.swagger");
-const team_swagger_1 = require("../modules/v1/teams/team.swagger");
-const match_swagger_1 = require("../modules/v1/tenant/matchs/match.swagger");
-const matches_swagger_1 = require("../modules/v1/matches/matches.swagger");
-const player_swagger_1 = require("../modules/v1/players/player.swagger");
+const auth_swagger_1 = require("../modules/v1/features/main-user/auth/swagger/auth.swagger");
+const plan_swagger_1 = require("../modules/v1/features/main-user/plans/swagger/plan.swagger");
+const tenant_swagger_1 = require("../modules/v1/features/main-user/tenants/swagger/tenant.swagger");
+const dashboard_swagger_1 = require("../modules/v1/features/tenant/dashboard/swagger/dashboard.swagger");
+const team_swagger_1 = require("../modules/v1/features/tenant/teams/swagger/team.swagger");
+const match_swagger_1 = require("../modules/v1/features/tenant/matches/swagger/match.swagger");
+const team_assignment_swagger_1 = require("../modules/v1/features/tenant/matches/swagger/team-assignment.swagger");
+const player_swagger_1 = require("../modules/v1/features/tenant/players/swagger/player.swagger");
 const options = {
     definition: {
         openapi: '3.0.0',
@@ -423,14 +422,13 @@ const options = {
             }
         },
         paths: {
-            ...userAuth_swagger_1.userAuthPaths,
-            ...plans_swagger_1.plansPaths,
-            ...plan_permission_swagger_1.planPermissionPaths,
+            ...auth_swagger_1.userAuthPaths,
+            ...plan_swagger_1.planPaths,
             ...tenant_swagger_1.tenantPaths,
-            ...role_swagger_1.rolePaths,
+            ...dashboard_swagger_1.dashboardPaths,
             ...team_swagger_1.teamPaths,
             ...match_swagger_1.matchPaths,
-            ...matches_swagger_1.matchesPaths,
+            ...team_assignment_swagger_1.teamAssignmentPaths,
             ...player_swagger_1.playerPaths
         }
     },

@@ -14,10 +14,6 @@ const typeorm_1 = require("typeorm");
 const User_1 = require("./User");
 const Plan_1 = require("./Plan");
 const Match_1 = require("./Match");
-// import { Plan } from './Plan';
-// import { Match } from './Match';
-// import { Tournament } from './Tournament';
-// import { Subscription } from './Subscription';
 let Tenant = class Tenant {
 };
 exports.Tenant = Tenant;
