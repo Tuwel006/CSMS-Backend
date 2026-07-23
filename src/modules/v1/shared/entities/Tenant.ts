@@ -11,10 +11,6 @@ import {
 import { User } from './User';
 import { Plan } from './Plan';
 import { Match } from './Match';
-// import { Plan } from './Plan';
-// import { Match } from './Match';
-// import { Tournament } from './Tournament';
-// import { Subscription } from './Subscription';
 
 @Entity('tenants')
 export class Tenant {
@@ -45,12 +41,6 @@ export class Tenant {
 
   @OneToMany(() => Match, (match) => match.tenant)
   matches: Match[];
-
-//   @OneToMany(() => Tournament, (tournament) => tournament.tenant)
-//   tournaments: Tournament[];
-
-//   @OneToMany(() => Subscription, (subscription) => subscription.tenant)
-//   subscriptions: Subscription[];
 
   @CreateDateColumn()
   createdAt: Date;

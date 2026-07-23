@@ -1,7 +1,7 @@
 import { sseManager } from "../sse/sse.manager";
 import { LiveScorePayload } from "../types/score.type";
 import { redisService } from "../services/redisScore.service";
-import { LiveScoreQuery } from "../modules/v1/matches/match.queries";
+import { LiveScoreQuery } from "../modules/v1/features/tenant/matches/match.queries";
 
 export class LiveScoreService {
     // Implementation for live score service

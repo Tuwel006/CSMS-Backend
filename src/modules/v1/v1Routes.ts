@@ -1,39 +1,28 @@
 import { Router } from 'express';
-import { userAuthRoutes } from './user';
-import { plansRoutes, planPermissionRoutes } from './admin';
-import tenantRoutes from './tenant';
-import { teamRoutes } from './teams';
-import { playerRoutes } from './players';
-import tournamentRoutes from './tournaments/tournament.routes';
-import { matchesRoutes } from './matches';
+import { userAuthRoutes } from './features/main-user/auth';
+import { plansRoutes } from './features/main-user/plans';
+import { tenantRoutes } from './features/main-user/tenants';
+import { dashboardRoutes } from './features/tenant/dashboard';
+import { teamRoutes } from './features/tenant/teams';
+import { playerRoutes } from './features/tenant/players';
+import { matchesRoutes } from './features/tenant/matches';
 import { authMiddleware } from './shared/middlewares/auth.middleware';
-import sseRoutes from './sse';
+import { scoreSSEHandler } from '../../sse/score.sse';
 
 const router = Router();
 
-// User routes
+// Main-user (system-admin) features
 router.use('/user/auth', userAuthRoutes);
-
-// Admin routes
 router.use('/admin/plans', plansRoutes);
-router.use('/admin/plan-permissions', planPermissionRoutes);
+router.use('/tenants', tenantRoutes);
 
-// Tenant routes
-router.use('/tenant', tenantRoutes);
-
-// Teams routes
+// Tenant-scoped features
+router.use('/tenant/dashboard', dashboardRoutes);
 router.use('/teams', authMiddleware, teamRoutes);
-
-// Tournaments routes
-router.use('/tournaments', authMiddleware, tournamentRoutes);
-
-// Players routes
 router.use('/players', authMiddleware, playerRoutes);
-
-// Matches routes (auth handled in matches.routes.ts)
 router.use('/matches', matchesRoutes);
 
-//sse routes
-router.use('/sse', sseRoutes);
+// SSE route
+router.get('/sse/score/:matchId', scoreSSEHandler);
 
 export default router;

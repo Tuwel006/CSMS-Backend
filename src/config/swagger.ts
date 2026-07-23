@@ -1,14 +1,12 @@
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import { userAuthPaths } from '../modules/v1/user/auth/userAuth.swagger';
-import { plansPaths } from '../modules/v1/admin/plans/plans.swagger';
-import { planPermissionPaths } from '../modules/v1/admin/plan-permissions/plan-permission.swagger';
-import { tenantPaths } from '../modules/v1/tenant/tenants/tenant.swagger';
-import { rolePaths } from '../modules/v1/tenant/roles/role.swagger';
-import { teamPaths } from '../modules/v1/teams/team.swagger';
-import { matchPaths } from '../modules/v1/tenant/matchs/match.swagger';
-import { matchesPaths } from '../modules/v1/matches/matches.swagger';
-import { playerPaths } from '../modules/v1/players/player.swagger';
+import { userAuthPaths } from '../modules/v1/features/main-user/auth/userAuth.swagger';
+import { planPaths as plansPaths } from '../modules/v1/features/main-user/plans/plan.swagger';
+import { tenantPaths } from '../modules/v1/features/main-user/tenants/tenant.swagger';
+import { dashboardPaths } from '../modules/v1/features/tenant/dashboard/dashboard.swagger';
+import { teamPaths } from '../modules/v1/features/tenant/teams/team.swagger';
+import { matchPaths as matchesPaths } from '../modules/v1/features/tenant/matches/match.swagger';
+import { playerPaths } from '../modules/v1/features/tenant/players/player.swagger';
 
 const options = {
   definition: {
@@ -419,11 +417,9 @@ const options = {
     paths: {
       ...userAuthPaths,
       ...plansPaths,
-      ...planPermissionPaths,
       ...tenantPaths,
-      ...rolePaths,
+      ...dashboardPaths,
       ...teamPaths,
-      ...matchPaths,
       ...matchesPaths,
       ...playerPaths
     }

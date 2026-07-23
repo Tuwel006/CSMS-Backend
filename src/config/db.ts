@@ -12,15 +12,7 @@ import { BallByBall } from '../modules/v1/shared/entities/BallByBall';
 import { Player } from '../modules/v1/shared/entities/Player';
 import { PlayerStats } from '../modules/v1/shared/entities/PlayerStats';
 import { MatchPlayer } from '../modules/v1/shared/entities/MatchPlayer';
-import { Role } from '../modules/v1/shared/entities/Role';
-import { Permission } from '../modules/v1/shared/entities/Permission';
-import { RolePermission } from '../modules/v1/shared/entities/RolePermission';
 import { Plan } from '../modules/v1/shared/entities/Plan';
-import { PlanPermission } from '../modules/v1/shared/entities/PlanPermission';
-import { UserPlan } from '../modules/v1/shared/entities/UserPlan';
-import { UserRole } from '../modules/v1/shared/entities/UserRole';
-import { BallHistory } from '../modules/v1/shared/entities/BallHistory';
-import { Tournament } from '../modules/v1/shared/entities/Tournament';
 
 if (process.env.DOTENV_CONFIG_PATH) {
     dotenv.config({ path: process.env.DOTENV_CONFIG_PATH });
@@ -44,9 +36,7 @@ export const AppDataSource = new DataSource({
     entities: [
         User, Tenant, Match, Team, MatchInnings,
         InningsBatting, InningsBowling, BallByBall,
-        Player, PlayerStats, MatchPlayer, Role,
-        Permission, RolePermission, Plan, PlanPermission,
-        UserPlan, UserRole, BallHistory, Tournament
+        Player, PlayerStats, MatchPlayer, Plan
     ],
     ssl: (isStaging || isProduction || isDevelopment) ? {
         rejectUnauthorized: false

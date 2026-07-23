@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { ApiResponse } from '../utils/ApiResponse';
 
 export function errorHandler(
   err: any,
@@ -6,17 +7,11 @@ export function errorHandler(
   res: Response,
   next: NextFunction
 ) {
-  // Default to 500 Internal Server Error
   const status = err.status || 500;
   const message = err.message || 'Internal Server Error';
 
-  // Optionally log the error
   console.error(err);
 
-  res.status(status).json({
-    success: false,
-    error: {
-      message,
-    },
-  });
+  const response = ApiResponse.serverError(message);
+  res.status(status).json(response);
 }

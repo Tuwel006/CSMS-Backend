@@ -36,7 +36,7 @@ export async function scoreSSEHandler(req: Request, res: Response) {
             });
 
             if (match?.current_innings_id) {
-                const { LiveScoreQuery } = await import('../modules/v1/matches/match.queries');
+                const { LiveScoreQuery } = await import('../modules/v1/features/tenant/matches/match.queries');
                 snapshot = await LiveScoreQuery.build(matchId, match.current_innings_id);
                 // Store in Redis for future requests
                 await redisService.setScore({ matchId, payload: snapshot });
