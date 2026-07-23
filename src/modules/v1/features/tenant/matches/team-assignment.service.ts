@@ -4,15 +4,15 @@ import { Player, PlayerRole } from '../../../shared/entities/Player';
 import { Match } from '../../../shared/entities/Match';
 import { MatchPlayer } from '../../../shared/entities/MatchPlayer';
 import { HTTP_STATUS } from '../../../../../constants/status-codes';
-import { TeamSetupDto } from './dtos/team-setup.dto';
+import { TeamAssignmentDto } from './dtos/team-assignment.dto';
 import { runInTransaction } from '../../../../../utils/transaction';
 
-export class TeamSetupService {
+export class TeamAssignmentService {
   /**
    * Create or assign a team to a match along with its players.
    * If team_a_id is empty, assigns to team_a; otherwise to team_b.
    */
-  static async setupTeam(data: TeamSetupDto) {
+  static async assignTeam(data: TeamAssignmentDto) {
     return runInTransaction(async (manager) => {
       const teamRepo = manager.getRepository(Team);
       const playerRepo = manager.getRepository(Player);
@@ -24,13 +24,13 @@ export class TeamSetupService {
         throw { status: HTTP_STATUS.NOT_FOUND, message: 'Match not found' };
       }
 
-      const teamId = await TeamSetupService.resolveTeamId(teamRepo, data.team);
-      TeamSetupService.assertTeamNotAssigned(match, teamId);
+      const teamId = await TeamAssignmentService.resolveTeamId(teamRepo, data.team);
+      TeamAssignmentService.assertTeamNotAssigned(match, teamId);
 
-      const teamAssignedTo = TeamSetupService.assignTeamSlot(match, teamId);
+      const teamAssignedTo = TeamAssignmentService.assignTeamSlot(match, teamId);
       await matchRepo.save(match);
 
-      const playerResults = await TeamSetupService.attachPlayersToTeam(
+      const playerResults = await TeamAssignmentService.attachPlayersToTeam(
         manager,
         data.matchId,
         teamId,
@@ -50,7 +50,7 @@ export class TeamSetupService {
    * Replace the player list for an already-assigned team in a match.
    * Existing assignments for that team are deleted first.
    */
-  static async updateTeamSetup(matchId: string, teamId: number, data: TeamSetupDto) {
+  static async updateTeamAssignment(matchId: string, teamId: number, data: TeamAssignmentDto) {
     return runInTransaction(async (manager) => {
       const matchRepo = manager.getRepository(Match);
       const matchPlayerRepo = manager.getRepository(MatchPlayer);
@@ -96,8 +96,8 @@ export class TeamSetupService {
    * Deletion is intentionally a no-op while we decide on cascade behavior.
    * Returning a stable shape lets the controller still emit a success response.
    */
-  static async deleteTeamSetup(_matchId: string, _teamId: number) {
-    return { message: 'Team setup deletion is disabled' };
+  static async removeTeamAssignment(_matchId: string, _teamId: number) {
+    return { message: 'Team assignment deletion is disabled' };
   }
 
   // ---- Private helpers ----
@@ -107,7 +107,7 @@ export class TeamSetupService {
    */
   private static async resolveTeamId(
     teamRepo: Repository<Team>,
-    teamData: TeamSetupDto['team']
+    teamData: TeamAssignmentDto['team']
   ): Promise<number> {
     if (teamData.id) {
       const existing = await teamRepo.findOne({ where: { id: teamData.id } });
@@ -157,14 +157,14 @@ export class TeamSetupService {
     manager: EntityManager,
     matchId: string,
     teamId: number,
-    players: TeamSetupDto['players']
+    players: TeamAssignmentDto['players']
   ) {
     const playerRepo = manager.getRepository(Player);
     const matchPlayerRepo = manager.getRepository(MatchPlayer);
     const results: Array<{ playerId: number; name: string; role: string }> = [];
 
     for (const playerData of players) {
-      const playerId = await TeamSetupService.resolvePlayerId(playerRepo, playerData);
+      const playerId = await TeamAssignmentService.resolvePlayerId(playerRepo, playerData);
 
       const existingAssignment = await matchPlayerRepo.findOne({
         where: { match_id: matchId, player_id: playerId }
@@ -197,7 +197,7 @@ export class TeamSetupService {
 
   private static async resolvePlayerId(
     playerRepo: Repository<Player>,
-    playerData: TeamSetupDto['players'][number]
+    playerData: TeamAssignmentDto['players'][number]
   ): Promise<number> {
     if (playerData.id) {
       const existing = await playerRepo.findOne({ where: { id: playerData.id } });

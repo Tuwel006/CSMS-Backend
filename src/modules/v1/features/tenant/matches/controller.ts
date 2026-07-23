@@ -1,5 +1,7 @@
 import { Response } from 'express';
 import { MatchesService } from './service';
+import { ScoringService } from './scoring.service';
+import { ScoreboardService } from './scoreboard.service';
 import {
   CreateMatchDto,
   GetMatchesQueryDto,
@@ -19,6 +21,10 @@ import {
 } from '../../../../../utils/controller-helpers';
 import { AuthRequest } from '../../../../../types/auth.types';
 
+// Re-export the team-assignment controller so existing imports and the
+// v1 router mount still work.
+export { TeamAssignmentController } from './team-assignment.controller';
+
 export class MatchesController {
   // ---- Match CRUD ----
 
@@ -34,41 +40,7 @@ export class MatchesController {
     }
   }
 
-  static async generateMatchToken(req: AuthRequest, res: Response) {
-    try {
-      const tenantId = requireTenantId(req, res);
-      if (!tenantId) return;
-      const userId = requireUserId(req, res);
-      if (!userId) return;
-
-      const match = await MatchesService.generateMatchToken(tenantId, userId);
-      sendCreated(res, match, 'Match token generated successfully');
-    } catch (error) {
-      sendMappedError(res, error);
-    }
-  }
-
-  static async getMatchesByTenant(req: AuthRequest, res: Response) {
-    try {
-      const tenantId = requireTenantId(req, res);
-      if (!tenantId) return;
-
-      const query: GetMatchesQueryDto = {
-        page: req.query.page ? parseInt(req.query.page as string) : undefined,
-        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
-        status: req.query.status as string,
-        sorted: req.query.sorted as string,
-        sorted_order: req.query.sorted_order as any
-      };
-
-      const result = await MatchesService.getMatchesByTenant(tenantId, query);
-      sendSuccess(res, result, 'Matches retrieved successfully');
-    } catch (error) {
-      sendMappedError(res, error);
-    }
-  }
-
-  static async getMatches(req: AuthRequest, res: Response) {
+  static async listMatches(req: AuthRequest, res: Response) {
     try {
       const tenantId = requireTenantId(req, res);
       if (!tenantId) return;
@@ -84,19 +56,6 @@ export class MatchesController {
     }
   }
 
-  static async getAllMatches(req: AuthRequest, res: Response) {
-    try {
-      const page = parseIntQuery(req.query.page, 1);
-      const limit = parseIntQuery(req.query.limit, 10);
-      const sortBy = (req.query.sortBy as string) || 'createdAt';
-
-      const matches = await MatchesService.getAllMatches(page, limit, sortBy);
-      sendSuccess(res, matches, 'All matches retrieved successfully');
-    } catch (error) {
-      sendMappedError(res, error);
-    }
-  }
-
   static async getMatchById(req: AuthRequest, res: Response) {
     try {
       const tenantId = requireTenantId(req, res);
@@ -104,18 +63,6 @@ export class MatchesController {
 
       const match = await MatchesService.getMatchById(req.params.id, tenantId);
       sendSuccess(res, match, 'Match retrieved successfully');
-    } catch (error) {
-      sendMappedError(res, error);
-    }
-  }
-
-  static async getCurrentCreatedMatch(req: AuthRequest, res: Response) {
-    try {
-      const tenantId = requireTenantId(req, res);
-      if (!tenantId) return;
-
-      const match = await MatchesService.getCurrentCreatedMatch(req.params.id, tenantId);
-      sendSuccess(res, match, 'Match details retrieved successfully');
     } catch (error) {
       sendMappedError(res, error);
     }
@@ -149,19 +96,47 @@ export class MatchesController {
     }
   }
 
+  // ---- Match tokens (sub-resource) ----
+
+  static async generateMatchToken(req: AuthRequest, res: Response) {
+    try {
+      const tenantId = requireTenantId(req, res);
+      if (!tenantId) return;
+      const userId = requireUserId(req, res);
+      if (!userId) return;
+
+      const match = await MatchesService.generateMatchToken(tenantId, userId);
+      sendCreated(res, match, 'Match token generated successfully');
+    } catch (error) {
+      sendMappedError(res, error);
+    }
+  }
+
+  static async getMatchByToken(req: AuthRequest, res: Response) {
+    try {
+      const tenantId = requireTenantId(req, res);
+      if (!tenantId) return;
+
+      const match = await MatchesService.getCurrentCreatedMatch(req.params.tokenId, tenantId);
+      sendSuccess(res, match, 'Match details retrieved successfully');
+    } catch (error) {
+      sendMappedError(res, error);
+    }
+  }
+
   static async deleteMatchToken(req: AuthRequest, res: Response) {
     try {
       const tenantId = requireTenantId(req, res);
       if (!tenantId) return;
 
-      const result = await MatchesService.deleteMatchToken(req.params.id, tenantId);
+      const result = await MatchesService.deleteMatchToken(req.params.tokenId, tenantId);
       sendSuccess(res, result, 'Match token deleted successfully');
     } catch (error) {
       sendMappedError(res, error);
     }
   }
 
-  // ---- Match lifecycle ----
+  // ---- Match lifecycle (state transitions) ----
 
   static async scheduleMatch(req: AuthRequest, res: Response) {
     try {
@@ -207,14 +182,14 @@ export class MatchesController {
     }
   }
 
-  // ---- Live scoring ----
+  // ---- Scoreboard (read-only) ----
 
   static async getMatchScore(req: AuthRequest, res: Response) {
     try {
       const tenantId = requireTenantId(req, res);
       if (!tenantId) return;
 
-      const scoreData = await MatchesService.getMatchScore(req.params.id, tenantId);
+      const scoreData = await ScoreboardService.getMatchScore(req.params.id, tenantId);
       sendRaw(res, scoreData);
     } catch (error) {
       sendMappedError(res, error);
@@ -224,7 +199,7 @@ export class MatchesController {
   static async getPublicMatchScore(req: AuthRequest, res: Response) {
     try {
       const tenantId = req.user?.tenantId ?? 1; // public access fallback
-      const scoreData = await MatchesService.getPublicMatchScore(req.params.id, tenantId);
+      const scoreData = await ScoreboardService.getPublicMatchScore(req.params.id, tenantId);
       sendRaw(res, scoreData);
     } catch (error) {
       sendMappedError(res, error);
@@ -236,7 +211,7 @@ export class MatchesController {
       const tenantId = requireTenantId(req, res);
       if (!tenantId) return;
 
-      const result = await MatchesService.getAvailableBatsmen(req.params.id, tenantId);
+      const result = await ScoreboardService.getAvailableBatsmen(req.params.id, tenantId);
       sendRaw(res, result);
     } catch (error) {
       sendMappedError(res, error);
@@ -248,31 +223,33 @@ export class MatchesController {
       const tenantId = requireTenantId(req, res);
       if (!tenantId) return;
 
-      const result = await MatchesService.getBowlingTeamPlayers(req.params.id, tenantId);
+      const result = await ScoreboardService.getBowlingTeamPlayers(req.params.id, tenantId);
       sendRaw(res, result);
     } catch (error) {
       sendMappedError(res, error);
     }
   }
 
-  static async setBatsman(req: AuthRequest, res: Response) {
+  // ---- Live scoring (write-side) ----
+
+  static async addBatsman(req: AuthRequest, res: Response) {
     try {
       const tenantId = requireTenantId(req, res);
       if (!tenantId) return;
 
-      const result = await MatchesService.setBatsman(req.params.id, req.body, tenantId);
+      const result = await ScoringService.setBatsman(req.params.id, req.body, tenantId);
       sendSuccess(res, result, 'Batsman set successfully');
     } catch (error) {
       sendMappedError(res, error);
     }
   }
 
-  static async setBowler(req: AuthRequest, res: Response) {
+  static async addBowler(req: AuthRequest, res: Response) {
     try {
       const tenantId = requireTenantId(req, res);
       if (!tenantId) return;
 
-      const result = await MatchesService.setBowler(req.params.id, req.body, tenantId);
+      const result = await ScoringService.setBowler(req.params.id, req.body, tenantId);
       sendSuccess(res, result, 'Bowler set successfully');
     } catch (error) {
       sendMappedError(res, error);
@@ -284,7 +261,7 @@ export class MatchesController {
       const tenantId = requireTenantId(req, res);
       if (!tenantId) return;
 
-      const result = await MatchesService.recordBall(req.params.id, req.body, tenantId);
+      const result = await ScoringService.recordBall(req.params.id, req.body, tenantId);
       sendSuccess(res, result, 'Ball recorded successfully');
     } catch (error) {
       sendMappedError(res, error);
@@ -296,7 +273,7 @@ export class MatchesController {
       const tenantId = requireTenantId(req, res);
       if (!tenantId) return;
 
-      const result = await MatchesService.switchToNextInnings(
+      const result = await ScoringService.switchToNextInnings(
         req.params.id,
         req.body as SwitchInningsDto,
         tenantId

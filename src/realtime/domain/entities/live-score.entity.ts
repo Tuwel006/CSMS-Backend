@@ -1,7 +1,9 @@
 /**
- * Type definitions for live score payloads broadcast over SSE.
- * Field names use short keys (i, n, r, b, w, e, o) to minimize payload size
- * for high-frequency ball-by-ball updates.
+ * Domain entity: LiveScorePayload.
+ *
+ * Pure data shape — no I/O, no framework imports. Field names use short
+ * keys (i, n, r, b, w, e, o) to minimize payload size for high-frequency
+ * ball-by-ball updates over SSE.
  */
 
 export interface LiveScorePayload {

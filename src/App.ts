@@ -6,6 +6,7 @@ import { errorHandler } from './middlewares';
 import morgan from 'morgan';
 import { swaggerUi, specs } from './config/swagger';
 import cookieParser from 'cookie-parser';
+import { initializeRealtime } from './realtime';
 
 const app = express();
 
@@ -29,6 +30,14 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 // app.use(bodyParser);
+
+// Initialize the realtime module (SSE + Redis pub/sub). The container is
+// built once and exposed via getters (getLiveScorePublisher etc.) so the
+// rest of the app can publish after DB commits.
+initializeRealtime().catch((err) => {
+  // eslint-disable-next-line no-console
+  console.error('Failed to initialize realtime module:', err);
+});
 
 // Root health check route
 app.get('/', (_req, res) => {

@@ -6,9 +6,8 @@ import { dashboardRoutes } from './features/tenant/dashboard';
 import { teamRoutes } from './features/tenant/teams';
 import { playerRoutes } from './features/tenant/players';
 import { matchesRoutes } from './features/tenant/matches';
-import { teamSetupRoutes } from './features/tenant/team-setup';
 import { authMiddleware } from './shared/middlewares/auth.middleware';
-import { scoreSSEHandler } from '../../realtime/sse/score-sse.handler';
+import { scoreSSEHandler } from '../../realtime';
 
 const router = Router();
 
@@ -22,9 +21,6 @@ router.use('/tenant/dashboard', dashboardRoutes);
 router.use('/teams', authMiddleware, teamRoutes);
 router.use('/players', authMiddleware, playerRoutes);
 router.use('/matches', matchesRoutes);
-// Team-setup is a sub-resource of matches but lives in its own feature folder.
-// Mounted under /matches/team-setup to preserve the existing public URL surface.
-router.use('/matches/team-setup', teamSetupRoutes);
 
 // SSE route
 router.get('/sse/score/:matchId', scoreSSEHandler);

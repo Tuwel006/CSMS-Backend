@@ -6,7 +6,7 @@ import { tenantPaths } from '../modules/v1/features/main-user/tenants/swagger/te
 import { dashboardPaths } from '../modules/v1/features/tenant/dashboard/swagger/dashboard.swagger';
 import { teamPaths } from '../modules/v1/features/tenant/teams/swagger/team.swagger';
 import { matchPaths as matchesPaths } from '../modules/v1/features/tenant/matches/swagger/match.swagger';
-import { teamSetupPaths } from '../modules/v1/features/tenant/team-setup/swagger/team-setup.swagger';
+import { teamAssignmentPaths } from '../modules/v1/features/tenant/matches/swagger/team-assignment.swagger';
 import { playerPaths } from '../modules/v1/features/tenant/players/swagger/player.swagger';
 
 const options = {
@@ -422,7 +422,7 @@ const options = {
       ...dashboardPaths,
       ...teamPaths,
       ...matchesPaths,
-      ...teamSetupPaths,
+      ...teamAssignmentPaths,
       ...playerPaths
     }
   },

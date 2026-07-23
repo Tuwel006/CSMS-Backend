@@ -1,4 +1,4 @@
-export interface TeamSetupDto {
+export interface TeamAssignmentDto {
   matchId: string;
   team: {
     id?: number;

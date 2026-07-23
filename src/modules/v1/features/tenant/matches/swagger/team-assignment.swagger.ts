@@ -1,23 +1,28 @@
-export const teamSetupPaths = {
-  '/api/v1/matches/team-setup': {
+export const teamAssignmentPaths = {
+  '/api/v1/matches/{id}/teams': {
     post: {
-      summary: 'Setup team for a match',
+      summary: 'Assign a team to a match',
       description: 'Creates or assigns a team and its players to a match. If team_a_id is empty, assigns to team_a, otherwise to team_b.',
       tags: ['Matches'],
       security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: 'Match ID',
+          example: 'match_123'
+        }
+      ],
       requestBody: {
         required: true,
         content: {
           'application/json': {
             schema: {
               type: 'object',
-              required: ['matchId', 'team', 'players'],
+              required: ['team', 'players'],
               properties: {
-                matchId: {
-                  type: 'string',
-                  description: 'Match ID',
-                  example: 'match_123'
-                },
                 team: {
                   type: 'object',
                   required: ['name', 'location'],
@@ -69,7 +74,6 @@ export const teamSetupPaths = {
             examples: {
               'New Team and Players': {
                 value: {
-                  matchId: 'match_123',
                   team: {
                     name: 'Mumbai Warriors',
                     location: 'Mumbai, India'
@@ -88,7 +92,6 @@ export const teamSetupPaths = {
               },
               'Existing Team with Mixed Players': {
                 value: {
-                  matchId: 'match_123',
                   team: {
                     id: 1,
                     name: 'Mumbai Warriors',
@@ -113,7 +116,7 @@ export const teamSetupPaths = {
       },
       responses: {
         201: {
-          description: 'Team setup completed successfully',
+          description: 'Team assignment completed successfully',
           content: {
             'application/json': {
               schema: {
@@ -121,7 +124,7 @@ export const teamSetupPaths = {
                 properties: {
                   status: { type: 'integer', example: 201 },
                   code: { type: 'string', example: 'CREATED' },
-                  message: { type: 'string', example: 'Team setup completed successfully' },
+                  message: { type: 'string', example: 'Team assigned successfully' },
                   data: {
                     type: 'object',
                     properties: {
@@ -173,15 +176,15 @@ export const teamSetupPaths = {
       }
     }
   },
-  '/api/v1/matches/team-setup/{matchId}/{teamId}': {
+  '/api/v1/matches/{id}/teams/{teamId}': {
     patch: {
-      summary: 'Update team setup for a match',
+      summary: 'Update team assignment for a match',
       description: 'Updates team players and their roles for a specific team in a match',
       tags: ['Matches'],
       security: [{ bearerAuth: [] }],
       parameters: [
         {
-          name: 'matchId',
+          name: 'id',
           in: 'path',
           required: true,
           schema: { type: 'string' },
@@ -209,21 +212,9 @@ export const teamSetupPaths = {
                   type: 'object',
                   required: ['name', 'location'],
                   properties: {
-                    id: {
-                      type: 'integer',
-                      description: 'Team ID',
-                      example: 1
-                    },
-                    name: {
-                      type: 'string',
-                      description: 'Team name',
-                      example: 'Mumbai Warriors'
-                    },
-                    location: {
-                      type: 'string',
-                      description: 'Team location',
-                      example: 'Mumbai, India'
-                    }
+                    id: { type: 'integer', example: 1 },
+                    name: { type: 'string', example: 'Mumbai Warriors' },
+                    location: { type: 'string', example: 'Mumbai, India' }
                   }
                 },
                 players: {
@@ -233,21 +224,9 @@ export const teamSetupPaths = {
                     type: 'object',
                     required: ['id', 'name', 'role'],
                     properties: {
-                      id: {
-                        type: 'integer',
-                        description: 'Player ID (required for update)',
-                        example: 1
-                      },
-                      name: {
-                        type: 'string',
-                        description: 'Player name',
-                        example: 'Virat Kohli'
-                      },
-                      role: {
-                        type: 'string',
-                        description: 'Player role',
-                        example: 'Captain'
-                      }
+                      id: { type: 'integer', example: 1 },
+                      name: { type: 'string', example: 'Virat Kohli' },
+                      role: { type: 'string', example: 'Captain' }
                     }
                   }
                 }
@@ -277,14 +256,14 @@ export const teamSetupPaths = {
       },
       responses: {
         200: {
-          description: 'Team setup updated successfully',
+          description: 'Team assignment updated successfully',
           content: {
             'application/json': {
               schema: {
                 type: 'object',
                 properties: {
                   status: { type: 'integer', example: 200 },
-                  message: { type: 'string', example: 'Team setup updated successfully' },
+                  message: { type: 'string', example: 'Team assignment updated successfully' },
                   data: {
                     type: 'object',
                     properties: {
@@ -335,13 +314,13 @@ export const teamSetupPaths = {
       }
     },
     delete: {
-      summary: 'Delete team setup from a match',
+      summary: 'Remove team assignment from a match',
       description: 'Removes team assignment and all associated players from a match',
       tags: ['Matches'],
       security: [{ bearerAuth: [] }],
       parameters: [
         {
-          name: 'matchId',
+          name: 'id',
           in: 'path',
           required: true,
           schema: { type: 'string' },
@@ -359,7 +338,7 @@ export const teamSetupPaths = {
       ],
       responses: {
         200: {
-          description: 'Team setup deleted successfully',
+          description: 'Team assignment removed successfully',
           content: {
             'application/json': {
               schema: {
@@ -367,11 +346,11 @@ export const teamSetupPaths = {
                 properties: {
                   status: { type: 'integer', example: 200 },
                   code: { type: 'string', example: 'SUCCESS' },
-                  message: { type: 'string', example: 'Team setup deleted successfully' },
+                  message: { type: 'string', example: 'Team assignment removed successfully' },
                   data: {
                     type: 'object',
                     properties: {
-                      message: { type: 'string', example: 'Team setup deleted successfully' }
+                      message: { type: 'string', example: 'Team assignment removed successfully' }
                     }
                   }
                 }

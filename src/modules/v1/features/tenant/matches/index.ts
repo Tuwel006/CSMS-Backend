@@ -1,6 +1,11 @@
 export { MatchesController } from './controller';
+export { TeamAssignmentController } from './team-assignment.controller';
 export { MatchesService } from './service';
-export { LiveScoreQuery } from './queries';
+export { ScoringService } from './scoring.service';
+export { ScoreboardService } from './scoreboard.service';
+export { TeamAssignmentService } from './team-assignment.service';
 export * from './dtos/match.dto';
+export * from './dtos/team-assignment.dto';
 export { default as matchesRoutes } from './routes';
 export { matchPaths } from './swagger/match.swagger';
+export { teamAssignmentPaths } from './swagger/team-assignment.swagger';

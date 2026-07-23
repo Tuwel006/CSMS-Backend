@@ -17,6 +17,6 @@ const validateTenantCreate = [
 
 const router = Router();
 
-router.post('/create', authMiddleware, validateTenantCreate, TenantController.createTenant);
+router.post('/', authMiddleware, validateTenantCreate, TenantController.createTenant);
 
 export default router;
